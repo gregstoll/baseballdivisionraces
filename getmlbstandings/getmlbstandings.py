@@ -4,7 +4,11 @@ import datetime
 import time
 from typing import NewType, Optional
 
-OPENING_DAY_GUESS = datetime.date(year=1, month=4, day=1)
+def get_opening_day_guess(year: int) -> datetime.date:
+    if year == 2020:
+        return datetime.date(year=year, month=7, day=20)
+    else:
+        return datetime.date(year=year, month=4, day=1)
 
 DivisionId = NewType('DivisionId', int)
 TeamId = NewType('TeamId', int)
@@ -83,7 +87,7 @@ class MlbYearStandings:
     
     def populate(self):
         # first, find opening day
-        opening_day_attempt = datetime.date(self.metadata.year, month=OPENING_DAY_GUESS.month, day=OPENING_DAY_GUESS.day)
+        opening_day_attempt = get_opening_day_guess(self.metadata.year)
         opening_day_data = get_raw_standings_data(opening_day_attempt)
         # TODO - handle if opening day is after this
         while len(opening_day_data.keys()) > 0:
