@@ -1,28 +1,43 @@
+from __future__ import annotations, division
 import statsapi
 import datetime
+import time
+from typing import NewType, Optional
+
+OPENING_DAY_GUESS = datetime.date(year=1, month=4, day=1)
+
+DivisionId = NewType('DivisionId', int)
+TeamId = NewType('TeamId', int)
 
 class DivisionInfo:
-    def __init__(self, division_id: int, name: str):
+    def __init__(self, division_id: DivisionId, name: str):
         self.division_id = division_id
         self.name = name
+        self.team_names : list[str] = []
 
     def __str__(self):
-        return f"{self.name} ({self.division_id})"
+        return f"{self.name} ({self.division_id}) with teams: {self.team_names}"
 
     def __repr__(self):
         return str(self)
 
 class MlbMetadata:
-    def __init__(self):
+    def __init__(self, year: int):
         self.id_to_division_info_dict : dict[int, DivisionInfo] = dict()
-        self.id_to_team_name_dict : dict[int, str] = dict()
-        self.team_name_to_id_dict : dict[str, int] = dict()
+        self.id_to_team_name_dict : dict[TeamId, str] = dict()
+        self.team_name_to_id_dict : dict[str, TeamId] = dict()
+        self.year = year
     
-    def add_division_info(self, division_id: int, division_json):
-        self.id_to_division_info_dict[division_id] = DivisionInfo(division_id, division_json['div_name'])
+    def add_division_info(self, division_id: DivisionId, division_json):
+        di = DivisionInfo(division_id, division_json['div_name'])
+        for team_json in division_json['teams']:
+            di.team_names.append(team_json['name'])
+            self.add_team_info(team_json)
+        di.team_names.sort()
+        self.id_to_division_info_dict[division_id] = di
 
     def add_team_info(self, team_json):
-        team_id : int = team_json['team_id']
+        team_id = TeamId(team_json['team_id'])
         team_name : str = team_json['name']
         self.id_to_team_name_dict[team_id] = team_name
         self.team_name_to_id_dict[team_name] = team_id
@@ -33,26 +48,95 @@ class MlbMetadata:
     def __repr__(self):
         return str(self)
 
-def get_metadata(year: int) -> MlbMetadata:
-    raw_data = get_raw_standings_data(datetime.date.today())
-    metadata = MlbMetadata()
-    for division_id in raw_data:
-        metadata.add_division_info(division_id, raw_data[division_id])
-        for team in raw_data[division_id]['teams']:
-            metadata.add_team_info(team)
-    return metadata
+    @classmethod
+    def get_metadata(cls, year: int) -> MlbMetadata:
+        # pick a day in the middle of the season (even in 2020)
+        raw_data = get_raw_standings_data(datetime.date(year=year, month=8, day=1))
+        metadata = cls(year)
+        for division_id in raw_data:
+            metadata.add_division_info(DivisionId(division_id), raw_data[division_id])
+        metadata.year = year
+        return metadata
 
-def get_raw_standings_data(date: datetime.date):
+class TeamStanding:
+    def __init__(self, team_id: TeamId, wins: int, losses: int):
+        self.team_id = team_id
+        self.wins = wins
+        self.losses = losses
+    
+    def __str__(self):
+        return f"{self.wins}-{self.losses}"
+
+    def __repr__(self):
+        return str(self)
+
+def next_day(date: datetime.date) -> datetime.date:
+    return datetime.date.fromordinal(date.toordinal() + 1)
+
+def previous_day(date: datetime.date) -> datetime.date:
+    return datetime.date.fromordinal(date.toordinal() - 1)
+
+class MlbYearStandings:
+    def __init__(self, metadata: MlbMetadata):
+        self.metadata = metadata
+        self.all_day_data : dict[datetime.date, dict[DivisionId, list[TeamStanding]]] = dict()
+    
+    def populate(self):
+        # first, find opening day
+        opening_day_attempt = datetime.date(self.metadata.year, month=OPENING_DAY_GUESS.month, day=OPENING_DAY_GUESS.day)
+        opening_day_data = get_raw_standings_data(opening_day_attempt)
+        # TODO - handle if opening day is after this
+        while len(opening_day_data.keys()) > 0:
+            self.store_day_data(opening_day_attempt, opening_day_data)
+            opening_day_attempt = previous_day(opening_day_attempt)
+            opening_day_data = get_raw_standings_data(opening_day_attempt)
+        self.add_before_opening_day_data(opening_day_attempt)
+        # TODO - now get the rest of the data
+    
+    def store_day_data(self, date: datetime.date, data: dict):
+        days_stored_data : dict[DivisionId, list[TeamStanding]] = dict()
+        for division_id in data:
+            division_stored_data : list[tuple[str, TeamStanding]] = list()
+            teams = data[division_id]['teams']
+            for team in teams:
+                division_stored_data.append((team['name'], TeamStanding(TeamId(team['team_id']), team['w'], team['l'])))
+            division_stored_data.sort()
+            days_stored_data[division_id] = [x[1] for x in division_stored_data]
+        self.all_day_data[date] = days_stored_data
+
+    def add_before_opening_day_data(self, date_before_opening_day: datetime.date):
+        opening_day_data = self.all_day_data[next_day(date_before_opening_day)]
+        before_opening_day_data : dict[DivisionId, list[TeamStanding]] = dict()
+        for division_id in opening_day_data:
+            division_data = [TeamStanding(x.team_id, 0, 0) for x in opening_day_data[division_id]]
+            before_opening_day_data[division_id] = division_data
+        self.all_day_data[date_before_opening_day] = before_opening_day_data
+
+    def __str__(self):
+        s = f"{self.metadata}\n\n"
+        for day in sorted(self.all_day_data.keys()):
+            s += f"{day}:  " + str(self.all_day_data[day]) + "\n"
+        return s
+
+    def __repr__(self):
+        return str(self)
+
+
+def get_raw_standings_data(date: datetime.date) -> dict:
     date_str = date.strftime('%m/%d/%Y')
+    # throttle
+    time.sleep(0.5)
     standings : dict = statsapi.standings_data(leagueId="103,104", date=date_str)
     return standings
-    for div_id in standings:
-        print(standings[div_id]['div_name'])
 
 #standings = statsapi.standings_data(leagueId="103,104", date="06/19/2021")
 #print(standings)
-get_raw_standings_data(datetime.date.today())
-m = get_metadata(2021)
+#get_raw_standings_data(datetime.date.today())
+m = MlbMetadata.get_metadata(2021)
 import pprint
 pp = pprint.PrettyPrinter(indent=2)
-pp.pprint(m)
+#pp.pprint(m)
+#pp.pprint(get_raw_standings_data(datetime.date(year=2021, month=4, day=1)))
+s = MlbYearStandings(m)
+s.populate()
+pp.pprint(s)
