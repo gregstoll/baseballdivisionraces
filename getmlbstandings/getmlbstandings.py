@@ -119,6 +119,8 @@ class MlbYearStandings:
                 return
             if current_day not in self.all_day_data:
                 data = get_raw_standings_data(current_day)
+                # TODO - need to look back at previous 10 days of data
+                # if all the same, must be the end of the season
                 if not data_is_empty(data):
                     self._store_day_data(current_day, data)
                 else:
@@ -190,7 +192,7 @@ def get_raw_standings_data(date: datetime.date) -> dict:
 #standings = get_raw_standings_data(datetime.date(year=2021, month=7, day=18))
 #print(standings)
 
-m = MlbMetadata.get_metadata(2021)
+m = MlbMetadata.get_metadata(2019)
 import pprint
 pp = pprint.PrettyPrinter(indent=2)
 #pp.pprint(m)
