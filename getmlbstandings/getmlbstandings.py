@@ -89,13 +89,26 @@ class MlbYearStandings:
         # first, find opening day
         opening_day_attempt = get_opening_day_guess(self.metadata.year)
         opening_day_data = get_raw_standings_data(opening_day_attempt)
-        # TODO - handle if opening day is after this
+        if len(opening_day_data.keys()) > 0:
+            opening_day = self.search_backward_for_opening_day(opening_day_attempt, opening_day_data)
+        else:
+            opening_day = self.search_forward_for_opening_day(opening_day_attempt, opening_day_data)
+        self.add_before_opening_day_data(previous_day(opening_day))
+        # TODO - now get the rest of the data
+
+    def search_backward_for_opening_day(self, opening_day_attempt: datetime.date, opening_day_data) -> datetime.date:
         while len(opening_day_data.keys()) > 0:
             self.store_day_data(opening_day_attempt, opening_day_data)
             opening_day_attempt = previous_day(opening_day_attempt)
             opening_day_data = get_raw_standings_data(opening_day_attempt)
-        self.add_before_opening_day_data(opening_day_attempt)
-        # TODO - now get the rest of the data
+        return next_day(opening_day_attempt)
+    
+    def search_forward_for_opening_day(self, opening_day_attempt: datetime.date, opening_day_data) -> datetime.date:
+        while len(opening_day_data.keys()) == 0:
+            opening_day_attempt = next_day(opening_day_attempt)
+            opening_day_data = get_raw_standings_data(opening_day_attempt)
+        self.store_day_data(opening_day_attempt, opening_day_data)
+        return opening_day_attempt
     
     def store_day_data(self, date: datetime.date, data: dict):
         days_stored_data : dict[DivisionId, list[TeamStanding]] = dict()
