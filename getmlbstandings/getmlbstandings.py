@@ -1,8 +1,11 @@
 from __future__ import annotations, division
-import statsapi
 import datetime
+import json
+import os
 import time
 from typing import NewType, Optional
+
+import statsapi
 
 def get_opening_day_guess(year: int) -> datetime.date:
     if year == 2020:
@@ -27,7 +30,7 @@ class DivisionInfo:
 
 class MlbMetadata:
     def __init__(self, year: int):
-        self.id_to_division_info_dict : dict[int, DivisionInfo] = dict()
+        self.id_to_division_info_dict : dict[DivisionId, DivisionInfo] = dict()
         self.id_to_team_name_dict : dict[TeamId, str] = dict()
         self.team_name_to_id_dict : dict[str, TeamId] = dict()
         self.year = year
@@ -93,6 +96,21 @@ class MlbYearStandings:
         opening_day = self._get_opening_day()
         self._add_before_opening_day_data(previous_day(opening_day))
         self._get_all_data(opening_day)
+
+    def write_to_json(self):
+        os.makedirs('data', exist_ok=True)
+        j = {}
+        j['metadata'] = { k: {"name": self.metadata.id_to_division_info_dict[k].name,
+                              "teams": self.metadata.id_to_division_info_dict[k].team_names} for k in self.metadata.id_to_division_info_dict}
+        all_days = sorted(self.all_day_data.keys())
+        opening_day = all_days[0]
+        j['opening_day'] = opening_day.strftime("%Y/%m/%d")
+        def day_data_to_json(day_data: dict[DivisionId, list[TeamStanding]]) -> dict:
+            return {k:[[standing.wins, standing.losses] for standing in day_data[k]] for k in day_data.keys()}
+        j['standings'] = [day_data_to_json(self.all_day_data[day]) for day in all_days]
+
+        with open(f"data/{self.metadata.year}.json", 'w') as f:
+            f.write(json.dumps(j))
 
     def _get_all_data(self, opening_day: datetime.date):
         current_day = next_day(opening_day)
@@ -179,4 +197,5 @@ pp = pprint.PrettyPrinter(indent=2)
 #pp.pprint(get_raw_standings_data(datetime.date(year=2021, month=4, day=1)))
 s = MlbYearStandings(m)
 s.populate()
+s.write_to_json()
 pp.pprint(s)
