@@ -77,6 +77,9 @@ class TeamStanding:
     def __repr__(self):
         return str(self)
 
+    def eq(self, o: TeamStanding) -> bool:
+        return self.team_id == o.team_id and self.wins == o.wins and self.losses == o.losses
+
 def next_day(date: datetime.date) -> datetime.date:
     return datetime.date.fromordinal(date.toordinal() + 1)
 
@@ -85,6 +88,26 @@ def previous_day(date: datetime.date) -> datetime.date:
 
 def data_is_empty(data: dict) -> bool:
     return len(data.keys()) == 0
+
+def day_data_equals(data1: dict[DivisionId, list[TeamStanding]], data2: Optional[dict[DivisionId, list[TeamStanding]]]) -> bool:
+    if data2 is None:
+        return False
+    data1Keys = data1.keys()
+    data2Keys = data2.keys()
+    if len(data1Keys) != len(data2Keys):
+        return False
+    for dataKey in data1Keys:
+        if dataKey not in data2Keys:
+            return False
+        standings1 = data1[dataKey]
+        standings2 = data2[dataKey]
+        if len(standings1) != len(standings2):
+            return False
+
+        for (s1, s2) in zip(standings1, standings2):
+            if not s1.eq(s2):
+                return False
+    return True
 
 class MlbYearStandings:
     def __init__(self, metadata: MlbMetadata):
@@ -114,17 +137,22 @@ class MlbYearStandings:
 
     def _get_all_data(self, opening_day: datetime.date):
         current_day = next_day(opening_day)
+        previous_day_data = None
         while True:
             if current_day >= datetime.date.today():
                 return
             if current_day not in self.all_day_data:
                 data = get_raw_standings_data(current_day)
-                # TODO - need to look back at previous 10 days of data
-                # if all the same, must be the end of the season
                 if not data_is_empty(data):
                     self._store_day_data(current_day, data)
                 else:
                     return
+            current_day_data = self.all_day_data[current_day]
+            # TODO - need to look back at previous 10 days of data
+            # if all the same, must be the end of the season
+            if day_data_equals(current_day_data, previous_day_data):
+                return
+            previous_day_data = current_day_data
             current_day = next_day(current_day)
 
     def _get_opening_day(self) -> datetime.date:
