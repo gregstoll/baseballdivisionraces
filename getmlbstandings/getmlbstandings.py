@@ -80,6 +80,9 @@ def next_day(date: datetime.date) -> datetime.date:
 def previous_day(date: datetime.date) -> datetime.date:
     return datetime.date.fromordinal(date.toordinal() - 1)
 
+def data_is_empty(data: dict) -> bool:
+    return len(data.keys()) == 0
+
 class MlbYearStandings:
     def __init__(self, metadata: MlbMetadata):
         self.metadata = metadata
@@ -87,24 +90,41 @@ class MlbYearStandings:
     
     def populate(self):
         # first, find opening day
+        opening_day = self.get_opening_day()
+        self.add_before_opening_day_data(previous_day(opening_day))
+        self._get_all_data(opening_day)
+
+    def _get_all_data(self, opening_day: datetime.date):
+        current_day = next_day(opening_day)
+        while True:
+            if current_day >= datetime.date.today():
+                return
+            if current_day not in self.all_day_data:
+                data = get_raw_standings_data(current_day)
+                if not data_is_empty(data):
+                    self.store_day_data(current_day, data)
+                else:
+                    return
+            current_day = next_day(current_day)
+
+    def get_opening_day(self) -> datetime.date:
         opening_day_attempt = get_opening_day_guess(self.metadata.year)
         opening_day_data = get_raw_standings_data(opening_day_attempt)
-        if len(opening_day_data.keys()) > 0:
+        if not data_is_empty(opening_day_data):
             opening_day = self.search_backward_for_opening_day(opening_day_attempt, opening_day_data)
         else:
             opening_day = self.search_forward_for_opening_day(opening_day_attempt, opening_day_data)
-        self.add_before_opening_day_data(previous_day(opening_day))
-        # TODO - now get the rest of the data
+        return opening_day
 
     def search_backward_for_opening_day(self, opening_day_attempt: datetime.date, opening_day_data) -> datetime.date:
-        while len(opening_day_data.keys()) > 0:
+        while not data_is_empty(opening_day_data):
             self.store_day_data(opening_day_attempt, opening_day_data)
             opening_day_attempt = previous_day(opening_day_attempt)
             opening_day_data = get_raw_standings_data(opening_day_attempt)
         return next_day(opening_day_attempt)
     
     def search_forward_for_opening_day(self, opening_day_attempt: datetime.date, opening_day_data) -> datetime.date:
-        while len(opening_day_data.keys()) == 0:
+        while data_is_empty(opening_day_data):
             opening_day_attempt = next_day(opening_day_attempt)
             opening_day_data = get_raw_standings_data(opening_day_attempt)
         self.store_day_data(opening_day_attempt, opening_day_data)
@@ -141,6 +161,7 @@ class MlbYearStandings:
 
 def get_raw_standings_data(date: datetime.date) -> dict:
     date_str = date.strftime('%m/%d/%Y')
+    print(f"getting for {date_str}")
     # throttle
     time.sleep(0.5)
     standings : dict = statsapi.standings_data(leagueId="103,104", date=date_str)
@@ -148,7 +169,9 @@ def get_raw_standings_data(date: datetime.date) -> dict:
 
 #standings = statsapi.standings_data(leagueId="103,104", date="06/19/2021")
 #print(standings)
-#get_raw_standings_data(datetime.date.today())
+#standings = get_raw_standings_data(datetime.date(year=2021, month=7, day=18))
+#print(standings)
+
 m = MlbMetadata.get_metadata(2021)
 import pprint
 pp = pprint.PrettyPrinter(indent=2)
