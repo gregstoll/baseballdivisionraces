@@ -137,7 +137,7 @@ class MlbYearStandings:
 
     def _get_all_data(self, opening_day: datetime.date):
         current_day = next_day(opening_day)
-        previous_day_data = None
+        previous_day_data = []
         while True:
             if current_day >= datetime.date.today():
                 return
@@ -150,10 +150,25 @@ class MlbYearStandings:
             current_day_data = self.all_day_data[current_day]
             # TODO - need to look back at previous 10 days of data
             # if all the same, must be the end of the season
-            if day_data_equals(current_day_data, previous_day_data):
-                return
-            previous_day_data = current_day_data
+            if len(previous_day_data) == 10:
+                if all([day_data_equals(current_day_data, p) for p in previous_day_data]):
+                    self._delete_copied_data_at_end(current_day)
+                    return
+            previous_day_data.append(current_day_data)
+            if len(previous_day_data) > 10:
+                previous_day_data = previous_day_data[1:]
             current_day = next_day(current_day)
+    
+    def _delete_copied_data_at_end(self, last_day: datetime.date):
+        last_day_data = self.all_day_data[last_day]
+        next_to_last_day = previous_day(last_day)
+        next_to_last_data = self.all_day_data[next_to_last_day]
+        while day_data_equals(last_day_data, next_to_last_data):
+            del self.all_day_data[last_day]
+            last_day = next_to_last_day
+            last_day_data = self.all_day_data[last_day]
+            next_to_last_day = previous_day(last_day)
+            next_to_last_data = self.all_day_data[next_to_last_day]
 
     def _get_opening_day(self) -> datetime.date:
         opening_day_attempt = get_opening_day_guess(self.metadata.year)
