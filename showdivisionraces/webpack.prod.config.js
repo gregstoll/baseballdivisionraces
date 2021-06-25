@@ -8,6 +8,7 @@ const paths = {
 }
 
 module.exports = {
+  mode: 'production',
   context: paths.src,
   entry: ['./app.ts'],
   module: {
