@@ -1,10 +1,6 @@
 import datetime
 import unittest
-# uggggh
-try:
-    from getmlbstandings import *
-except:
-    from getmlbstandings.getmlbstandings import *
+from getmlbstandings.getmlbstandings import *
 
 class TestUtilityMethods(unittest.TestCase):
     def test_previousday_lastdayofmonth(self):
