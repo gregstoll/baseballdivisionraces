@@ -235,12 +235,13 @@ def get_raw_standings_data(date: datetime.date) -> dict:
 #standings = get_raw_standings_data(datetime.date(year=2021, month=7, day=18))
 #print(standings)
 
-m = MlbMetadata.get_metadata(2019)
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-#pp.pprint(m)
-#pp.pprint(get_raw_standings_data(datetime.date(year=2021, month=4, day=1)))
-s = MlbYearStandings(m)
-s.populate()
-s.write_to_json()
-pp.pprint(s)
+if __name__ == '__main__':
+    m = MlbMetadata.get_metadata(2019)
+    import pprint
+    pp = pprint.PrettyPrinter(indent=2)
+    #pp.pprint(m)
+    #pp.pprint(get_raw_standings_data(datetime.date(year=2021, month=4, day=1)))
+    #s = MlbYearStandings(m)
+    #s.populate()
+    #s.write_to_json()
+    #pp.pprint(s)
