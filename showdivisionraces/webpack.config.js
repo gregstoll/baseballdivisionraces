@@ -20,9 +20,11 @@ module.exports = {
     ]
   },
   plugins: [
-    new CopyPlugin([
-      {from: paths.public, to: paths.dist}
-    ]),
+    new CopyPlugin({
+      patterns: [
+        {from: paths.public, to: paths.dist}
+      ]
+    }),
   ],
   resolve: {
     extensions: ['.tsx', '.ts', '.js', '.html']
