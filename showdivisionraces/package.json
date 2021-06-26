@@ -2,9 +2,9 @@
   "name": "showdivisionraces",
   "version": "1.0.0",
   "description": "Show MLB division races over time",
-  "main": "src/app.ts",
+  "private": true,
   "scripts": {
-    "start": "webpack serve",
+    "start": "webpack serve --liveReload",
     "build": "webpack --config webpack.prod.config.js && node replaceSsiTags.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

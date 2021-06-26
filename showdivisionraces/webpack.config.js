@@ -28,15 +28,17 @@ module.exports = {
     }),
   ],
   resolve: {
-    extensions: ['.tsx', '.ts', '.js', '.html']
+    extensions: ['.tsx', '.ts', '.js']
   },
   output: {
     filename: 'app.bundle.js',
+    //path: path.resolve(paths.dist, "dist"),
     path: paths.dist,
     publicPath: 'dist',
   },
   devtool: 'inline-source-map',
   devServer: {
     contentBase: paths.dist,
+    publicPath: "/dist"
   },
 }
