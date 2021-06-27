@@ -14,3 +14,4 @@
 
 
 - Use [Plotly](https://plotly.com/javascript/) for JS graph 
+  - the webpack build is huge, maybe use CDN instead?
