@@ -4,6 +4,8 @@ const CopyPlugin = require('copy-webpack-plugin');
 const paths = {
   src: path.join(__dirname, 'src'),
   dist: path.join(__dirname, 'dist'),
+  sourcemlbdata: path.join(__dirname, '..', 'getmlbstandings', 'data'),
+  distdata: path.join(__dirname, 'dist', 'data'),
   public: path.join(__dirname, 'public')
 }
 
@@ -23,7 +25,8 @@ module.exports = {
   plugins: [
     new CopyPlugin({
       patterns: [
-        {from: paths.public, to: paths.dist}
+        {from: paths.public, to: paths.dist},
+        {from: paths.sourcemlbdata, to: paths.distdata}
       ]
     }),
   ],
