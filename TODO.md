@@ -1,4 +1,3 @@
-- allow choosing year
 - have Python script clean up data from MLB (see below)
 - show all divisions (on separate graphs) 
 - better hovertips
@@ -6,6 +5,8 @@
   - formatting on hovertip?
 - choose appropriate team colors
 - gather data from earlier years
+- set up hash to point to year
+- light/dark mode
 - fill out HTML page
 
 
