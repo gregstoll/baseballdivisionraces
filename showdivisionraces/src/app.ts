@@ -20,8 +20,8 @@ function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: strin
     return plot_datas;
 }
 
-(async function() {
-    let response = await fetch('data/2018.json');
+async function changeYear(year: string) {
+    let response = await fetch(`data/${year}.json`);
     let raw_data : any = await response.json();
     const opening_day_str_parts : number[] = (raw_data.opening_day as string).split('/').map(x => parseInt(x, 10));
     // month is 0-indexed
@@ -37,4 +37,27 @@ function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: strin
     const divChart = document.getElementById("divisionchart");
     Plotly.newPlot( divChart, plot_datas, {
         margin: { t: 0 } } );
+
+}
+
+const MIN_YEAR = 2017;
+const MAX_YEAR = 2021;
+function setupYearSelector() {
+    let yearSelector = document.getElementById("yearSelect") as HTMLSelectElement;
+    for (let year = MIN_YEAR; year <= MAX_YEAR; ++year) {
+        let option = document.createElement("option");
+        option.value = year.toString();
+        option.text = year.toString();
+        yearSelector.add(option);
+    }
+    yearSelector.addEventListener('change', (event) => {
+        const newYear = (event.target as HTMLSelectElement).value
+        changeYear(newYear);
+    })
+    yearSelector.selectedIndex = yearSelector.children.length - 1;
+    changeYear(MAX_YEAR.toString());
+}
+
+(async function() {
+    setupYearSelector();
 })();

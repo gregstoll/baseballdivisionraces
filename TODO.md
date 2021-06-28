@@ -1,5 +1,5 @@
-- have Python script clean up data from MLB (see below)
 - allow choosing year
+- have Python script clean up data from MLB (see below)
 - show all divisions (on separate graphs) 
 - better hovertips
   - show all team data at once?
