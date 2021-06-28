@@ -21,14 +21,13 @@ function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: strin
 }
 
 (async function() {
-    let response = await fetch('data/2019.json');
-    let data2019 : any = await response.json();
-    //alert(data2019.metadata[200].name);
-    const opening_day_str_parts : number[] = (data2019.opening_day as string).split('/').map(x => parseInt(x, 10));
+    let response = await fetch('data/2018.json');
+    let raw_data : any = await response.json();
+    const opening_day_str_parts : number[] = (raw_data.opening_day as string).split('/').map(x => parseInt(x, 10));
     // month is 0-indexed
     const opening_day : Date = new Date(opening_day_str_parts[0], opening_day_str_parts[1] - 1, opening_day_str_parts[2]);
-    const team_names : string[] = data2019.metadata['200']['teams'];
-    const all_standings : Array<Array<number[]>> = data2019.standings.map(x => x['200']);
+    const team_names : string[] = raw_data.metadata['200']['teams'];
+    const all_standings : Array<Array<number[]>> = raw_data.standings.map(x => x['200']);
     const astros_standings = all_standings.map(x => x[0]);
     let date_values : Date[] = [opening_day];
     while (date_values.length < astros_standings.length) {
