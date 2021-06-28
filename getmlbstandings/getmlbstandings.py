@@ -3,6 +3,7 @@ import datetime
 import json
 import os
 import time
+import sys
 from typing import NewType, Optional
 
 import statsapi
@@ -212,6 +213,14 @@ class MlbYearStandings:
             before_opening_day_data[division_id] = division_data
         self.all_day_data[date_before_opening_day] = before_opening_day_data
 
+    def validate_data(self):
+        has_error = False
+        # TODO - things to validate
+        #  - starts with all 0's
+        #  - wins/losses never go down
+        #  - wins/losses go up at most 2 per day (for doubleheader)
+        #  - totals all the same at the end of the season?
+
     def __str__(self):
         s = f"{self.metadata}\n\n"
         for day in sorted(self.all_day_data.keys()):
@@ -236,7 +245,10 @@ def get_raw_standings_data(date: datetime.date) -> dict:
 #print(standings)
 
 if __name__ == '__main__':
-    m = MlbMetadata.get_metadata(2019)
+    year = 2020
+    if len(sys.argv) > 1:
+        year = int(sys.argv[1])
+    m = MlbMetadata.get_metadata(year)
     import pprint
     pp = pprint.PrettyPrinter(indent=2)
     #pp.pprint(m)
@@ -244,4 +256,5 @@ if __name__ == '__main__':
     s = MlbYearStandings(m)
     s.populate()
     s.write_to_json()
-    pp.pprint(s)
+    #pp.pprint(s)
+    s.validate_data()
