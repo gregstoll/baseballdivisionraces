@@ -17,6 +17,7 @@ function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: strin
             name: team_names[i]
         });
     }
+    plot_datas.sort((data1, data2) => data2.y[data2.y.length - 1] - data1.y[data1.y.length - 1]);
     return plot_datas;
 }
 
@@ -26,18 +27,27 @@ async function changeYear(year: string) {
     const opening_day_str_parts : number[] = (raw_data.opening_day as string).split('/').map(x => parseInt(x, 10));
     // month is 0-indexed
     const opening_day : Date = new Date(opening_day_str_parts[0], opening_day_str_parts[1] - 1, opening_day_str_parts[2]);
-    const team_names : string[] = raw_data.metadata['200']['teams'];
-    const all_standings : Array<Array<number[]>> = raw_data.standings.map(x => x['200']);
-    const astros_standings = all_standings.map(x => x[0]);
-    let date_values : Date[] = [opening_day];
-    while (date_values.length < astros_standings.length) {
-        date_values.push(next_day(date_values[date_values.length - 1]))
+    let index = 0;
+    for (let divisionId of Object.keys(raw_data.metadata)) { 
+        const team_names : string[] = raw_data.metadata[divisionId]['teams'];
+        const all_standings : Array<Array<number[]>> = raw_data.standings.map(x => x[divisionId]);
+        const astros_standings = all_standings.map(x => x[0]);
+        let date_values : Date[] = [opening_day];
+        while (date_values.length < astros_standings.length) {
+            date_values.push(next_day(date_values[date_values.length - 1]))
+        }
+        const plot_datas = get_plot_datas(all_standings, team_names, date_values);
+        const chartSection = document.getElementById("charts");
+        if (chartSection.childElementCount <= index) {
+            let newDiv = document.createElement('div');
+            newDiv.className = "chart";
+            chartSection.appendChild(newDiv);
+        }
+        Plotly.newPlot( chartSection.children.item(index), plot_datas, {
+            title: raw_data.metadata[divisionId]['name'] } );
+            //margin: { t: 0 }, title: raw_data.metadata[divisionId]['name'] } );
+        index++;
     }
-    const plot_datas = get_plot_datas(all_standings, team_names, date_values);
-    const divChart = document.getElementById("divisionchart");
-    Plotly.newPlot( divChart, plot_datas, {
-        margin: { t: 0 } } );
-
 }
 
 const MIN_YEAR = 2017;

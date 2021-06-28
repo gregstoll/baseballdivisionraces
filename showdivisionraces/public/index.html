@@ -10,6 +10,10 @@
         div.container {
           max-width: 800px;
         }
+        div.chart {
+          width: 100%;
+          height: 20%; /* TODO */
+        }
     </style>
     <ssihead />
   </head>
@@ -18,8 +22,10 @@
     <div class="container">
         <div style="width: 100%; text-align: center;">
             <h1 style="display: inline-block;">MLB Division Race Charts</h1>
-            <select id="yearSelect"></select>
-            <div id="divisionchart" style="width: 100%; height: 20%;"></div>
+            <p><select id="yearSelect"></select></p>
+            <div id="charts">
+
+            </div>
         </div>
     <p><a href="#about">About this project</a></p>
     <p id="about"><b>About this project:</b> TODO</p>
