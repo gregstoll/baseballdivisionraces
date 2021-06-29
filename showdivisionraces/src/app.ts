@@ -43,7 +43,7 @@ function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: strin
             name: team_names[i],
             line: {
                 color: TEAM_NAMES_TO_COLORS.get(team_names[i])?.light,
-                width: 1
+                width: 2
             }
         });
     }
