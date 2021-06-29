@@ -38,17 +38,20 @@ const TEAM_NAMES_TO_COLORS : Map<string, TeamColors> = new Map([
 
 function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: string[], date_values: Date[]) : any[] {
     let plot_datas = [];
+    const isDark = isDarkMode();
     for (let i = 0; i < team_names.length; ++i) {
         const team_standings = all_standings.map(x => x[i]);
         const games_above_500 = team_standings.map(x => x[0] - x[1]);
         const hover_texts = team_standings.map(x => `${x[0]}-${x[1]}`);
+        // TODO - assert that we have one?
+        const team_colors = TEAM_NAMES_TO_COLORS.get(team_names[i]);
         plot_datas.push({
             x: date_values,
             y: games_above_500,
             text: hover_texts,
             name: team_names[i],
             line: {
-                color: TEAM_NAMES_TO_COLORS.get(team_names[i])?.light,
+                color: isDark ? team_colors?.dark : team_colors?.light,
                 width: 2
             }
         });
@@ -86,6 +89,10 @@ async function changeYear(year: string) {
     }
 }
 
+function isDarkMode() : boolean {
+    return document.documentElement.getAttribute('color-mode') == 'dark';
+}
+
 const MIN_YEAR = 2015;
 const MAX_YEAR = 2021;
 function setupYearSelector() {
@@ -97,13 +104,50 @@ function setupYearSelector() {
         yearSelector.add(option);
     }
     yearSelector.addEventListener('change', (event) => {
-        const newYear = (event.target as HTMLSelectElement).value
-        changeYear(newYear);
-    })
+        updateYearBasedOnSelector();
+    });
     yearSelector.selectedIndex = yearSelector.children.length - 1;
     changeYear(MAX_YEAR.toString());
 }
 
+function updateYearBasedOnSelector() {
+    const newYear = (document.getElementById("yearSelect") as HTMLSelectElement).value;
+    changeYear(newYear);
+}
+
+// TODO - move to different .js file?
+if (window.CSS && CSS.supports("color", "var(--primary)")) {
+    let toggleColorMode = function toggleColorMode(e) {
+      // Switch to Light Mode
+      if (e.currentTarget.classList.contains("light--hidden")) {
+        // Sets the custom html attribute
+        document.documentElement.setAttribute("color-mode", "light"); // Sets the user's preference in local storage
+  
+        localStorage.setItem("color-mode", "light");
+        updateYearBasedOnSelector();
+        return;
+      }
+      /* Switch to Dark Mode
+      Sets the custom html attribute */
+      document.documentElement.setAttribute("color-mode", "dark"); // Sets the user's preference in local storage
+  
+      localStorage.setItem("color-mode", "dark");
+      updateYearBasedOnSelector();
+    }; // Get the buttons in the DOM
+  
+    let toggleColorButtons = document.querySelectorAll(".color-mode__btn"); // Set up event listeners
+  
+    toggleColorButtons.forEach(function(btn) {
+      btn.addEventListener("click", toggleColorMode);
+    });
+  } else {
+    // If the feature isn't supported, then we hide the toggle buttons
+    //TODO - does this work?
+    let btnContainer = document.querySelector(".color-mode__header") as HTMLHeadingElement;
+    btnContainer.style.display = "none";
+  }
+
 (async function() {
     setupYearSelector();
 })();
+
