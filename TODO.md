@@ -1,4 +1,3 @@
-- show all divisions (on separate graphs) 
 - better hovertips
   - show all team data at once?
   - formatting on hovertip?
