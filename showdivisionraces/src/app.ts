@@ -27,7 +27,13 @@ const TEAM_NAMES_TO_COLORS : Map<string, TeamColors> = new Map([
     ["Oakland Athletics", new TeamColors("#003831", "#efb21e")],
     ["Seattle Mariners", new TeamColors("#c4ced4")],
     ["Los Angeles Angels", new TeamColors("#862633")],
-    ["Texas Rangers", new TeamColors("#c0111f")]
+    ["Texas Rangers", new TeamColors("#c0111f")],
+    // NYY blue #134a8e is too close to Blue Jays, use black for pinstripes
+    ["New York Yankees", new TeamColors("#000000", "#c4ced3")],
+    ["Baltimore Orioles", new TeamColors("#df4601")],
+    ["Toronto Blue Jays", new TeamColors("#134a8e")],
+    ["Tampa Bay Rays", new TeamColors("#f5d130")],
+    ["Boston Red Sox", new TeamColors("#bd3039")]
 ]);
 
 function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: string[], date_values: Date[]) : any[] {
