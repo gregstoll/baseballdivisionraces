@@ -45,12 +45,11 @@ async function changeYear(year: string) {
         }
         Plotly.newPlot( chartSection.children.item(index), plot_datas, {
             title: raw_data.metadata[divisionId]['name'] } );
-            //margin: { t: 0 }, title: raw_data.metadata[divisionId]['name'] } );
         index++;
     }
 }
 
-const MIN_YEAR = 2017;
+const MIN_YEAR = 2015;
 const MAX_YEAR = 2021;
 function setupYearSelector() {
     let yearSelector = document.getElementById("yearSelect") as HTMLSelectElement;

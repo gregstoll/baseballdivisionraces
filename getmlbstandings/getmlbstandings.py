@@ -213,13 +213,66 @@ class MlbYearStandings:
             before_opening_day_data[division_id] = division_data
         self.all_day_data[date_before_opening_day] = before_opening_day_data
 
-    def validate_data(self):
-        has_error = False
-        # TODO - things to validate
-        #  - starts with all 0's
-        #  - wins/losses never go down
-        #  - wins/losses go up at most 2 per day (for doubleheader)
-        #  - totals all the same at the end of the season?
+    def validate_and_fix_data(self, already_fixed_beginning=False) -> bool:
+        all_days = sorted(self.all_day_data.keys())
+        opening_day = all_days[0]
+        opening_day_data = self.all_day_data[opening_day]
+        for division_id in opening_day_data:
+            division_data = opening_day_data[division_id]
+            if max([ts.wins + ts.losses for ts in division_data]) > 0:
+                print(f"WARNING - opening_day {opening_day} has games played already: {division_data}")
+                return False
+        yesterday_data = opening_day_data
+        for today in all_days[1:]:
+            today_data = self.all_day_data[today]
+            for division_id in today_data:
+                today_division_data = today_data[division_id]
+                yesterday_division_data = yesterday_data[division_id]
+                if len(today_division_data) != len(yesterday_division_data):
+                    print(f"Mismatched division size - today {today}, today_division_data {today_division_data} yesterday_division_data {yesterday_division_data}")
+                    return False
+                for (today_ts, yesterday_ts) in zip(today_division_data, yesterday_division_data):
+                    if today_ts.team_id != yesterday_ts.team_id:
+                        print(f"Team IDs out of order - today {today} today_division_data {today_division_data} yesterday_division_data {yesterday_division_data}")
+                        return False
+                    game_diff = (today_ts.wins + today_ts.losses) - (yesterday_ts.wins + yesterday_ts.losses)
+                    if game_diff > 2:
+                        print(f"Jump in games played on {today} in {division_id} from {yesterday_ts} to {today_ts}! Attempting to fix.")
+                        if yesterday_ts.wins == 0 and yesterday_ts.losses == 0:
+                            if not already_fixed_beginning:
+                                print(f"Weirdness is at beginning; trying to fix")
+                                self.all_day_data[today] = self.all_day_data[previous_day(today)]
+                                del self.all_day_data[previous_day(today)]
+                                return self.validate_and_fix_data(already_fixed_beginning=True)
+                            else:
+                                print(f"Weirdness is at beginning but already tried to fix it; going to uneasily continue on")
+                        else:
+                            print(f"Nope, can't figure it out")
+                            return False
+                    if today_ts.wins < yesterday_ts.wins or today_ts.losses < yesterday_ts.losses:
+                        print(f"Wins/losses went down on {today} in {division_id} from {yesterday_ts} to {today_ts}! Attempting to fix.")
+                        if today_ts.wins - yesterday_ts.wins < -1:
+                            print(f"Can't fix - wins drop too much!")
+                            return False
+                        elif today_ts.wins - yesterday_ts.wins == -1:
+                            print(f"Resetting wins")
+                            yesterday_ts.wins = today_ts.wins
+                        if today_ts.losses - yesterday_ts.losses < -1:
+                            print(f"Can't fix - losses drop too much!")
+                            return False
+                        elif today_ts.losses - yesterday_ts.losses == -1:
+                            print(f"Resetting losses")
+                            yesterday_ts.losses = today_ts.losses
+            yesterday_data = today_data
+        if self.metadata.year != datetime.date.today().year:
+            last_day_data = self.all_day_data[all_days[-1]]
+            total_games = [[ts.wins + ts.losses for ts in last_day_data[division_id]] for division_id in last_day_data]
+            flattened_total_games = [item for sublist in total_games for item in sublist]
+            # can be game 163 for tiebreaker, etc.
+            if max(flattened_total_games) - min(flattened_total_games) > 2:
+                print(f"Mismatched number of games played! {flattened_total_games}")
+                return False
+        return True
 
     def __str__(self):
         s = f"{self.metadata}\n\n"
@@ -235,7 +288,7 @@ def get_raw_standings_data(date: datetime.date) -> dict:
     date_str = date.strftime('%m/%d/%Y')
     print(f"getting for {date_str}")
     # throttle
-    time.sleep(0.5)
+    time.sleep(0.3)
     standings : dict = statsapi.standings_data(leagueId="103,104", date=date_str)
     return standings
 
@@ -255,6 +308,9 @@ if __name__ == '__main__':
     #pp.pprint(get_raw_standings_data(datetime.date(year=2021, month=4, day=1)))
     s = MlbYearStandings(m)
     s.populate()
+    validated = s.validate_and_fix_data()
+    if not validated:
+        print("--------------")
+        print("FAILED to validate data, writing anyway")
     s.write_to_json()
     #pp.pprint(s)
-    s.validate_data()
