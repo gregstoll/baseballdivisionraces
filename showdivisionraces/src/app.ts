@@ -67,6 +67,7 @@ async function changeYear(year: string) {
     // month is 0-indexed
     const opening_day : Date = new Date(opening_day_str_parts[0], opening_day_str_parts[1] - 1, opening_day_str_parts[2]);
     let index = 0;
+    const isDark = isDarkMode();
     // TODO - sort divisions somehow?
     for (let divisionId of Object.keys(raw_data.metadata)) { 
         const team_names : string[] = raw_data.metadata[divisionId]['teams'];
@@ -83,8 +84,21 @@ async function changeYear(year: string) {
             newDiv.className = "chart";
             chartSection.appendChild(newDiv);
         }
-        Plotly.newPlot( chartSection.children.item(index), plot_datas, {
-            title: raw_data.metadata[divisionId]['name'] } );
+
+        Plotly.newPlot( chartSection.children.item(index), plot_datas,
+         {
+            title: raw_data.metadata[divisionId]['name'],
+            xaxis: {
+                linecolor: isDark ? "#ffffff" : "#000000"
+            },
+            yaxis: {
+                linecolor: isDark ? "#ffffff" : "#000000",
+                zerolinecolor: isDark ? "#ffffff" : "#000000"
+            },
+            paper_bgcolor: isDark ? "#000000" : "#ffffff",
+            plot_bgcolor: isDark ? "#000000" : "#ffffff",
+            fontcolor: isDark ? "#ffffff" : "#000000"
+         });
         index++;
     }
 }
