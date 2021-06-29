@@ -4,6 +4,32 @@ function next_day(d: Date) : Date {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
 }
 
+class TeamColors {
+    _light: string;
+    _dark: string;
+
+    constructor(light, dark = undefined) {
+        this._light = light;
+        this._dark = dark ?? light;
+    }
+    // Color used in light mode
+    get light() { 
+        return this._light;
+    }
+    // Color used in dark mode
+    get dark() { 
+        return this._dark;
+    }
+}
+
+const TEAM_NAMES_TO_COLORS : Map<string, TeamColors> = new Map([
+    ["Houston Astros", new TeamColors("#eb6e1f")],
+    ["Oakland Athletics", new TeamColors("#003831", "#efb21e")],
+    ["Seattle Mariners", new TeamColors("#c4ced4")],
+    ["Los Angeles Angels", new TeamColors("#862633")],
+    ["Texas Rangers", new TeamColors("#c0111f")]
+]);
+
 function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: string[], date_values: Date[]) : any[] {
     let plot_datas = [];
     for (let i = 0; i < team_names.length; ++i) {
@@ -14,7 +40,11 @@ function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: strin
             x: date_values,
             y: games_above_500,
             text: hover_texts,
-            name: team_names[i]
+            name: team_names[i],
+            line: {
+                color: TEAM_NAMES_TO_COLORS.get(team_names[i])?.light,
+                width: 1
+            }
         });
     }
     plot_datas.sort((data1, data2) => data2.y[data2.y.length - 1] - data1.y[data1.y.length - 1]);
@@ -28,6 +58,7 @@ async function changeYear(year: string) {
     // month is 0-indexed
     const opening_day : Date = new Date(opening_day_str_parts[0], opening_day_str_parts[1] - 1, opening_day_str_parts[2]);
     let index = 0;
+    // TODO - sort divisions somehow?
     for (let divisionId of Object.keys(raw_data.metadata)) { 
         const team_names : string[] = raw_data.metadata[divisionId]['teams'];
         const all_standings : Array<Array<number[]>> = raw_data.standings.map(x => x[divisionId]);
