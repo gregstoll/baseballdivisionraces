@@ -32,6 +32,7 @@ const TEAM_NAMES_TO_COLORS : Map<string, TeamColors> = new Map([
     // NYY blue #134a8e is too close to Blue Jays, use black for pinstripes
     ["New York Yankees", new TeamColors("#000000", "#c4ced3")],
     ["Baltimore Orioles", new TeamColors("#df4601")],
+    // TODO too dark in dark mode
     ["Toronto Blue Jays", new TeamColors("#134a8e")],
     ["Tampa Bay Rays", new TeamColors("#f5d130")],
     ["Boston Red Sox", new TeamColors("#bd3039")],
@@ -49,6 +50,7 @@ const TEAM_NAMES_TO_COLORS : Map<string, TeamColors> = new Map([
     ["Colorado Rockies", new TeamColors("#33006f", "#c4ced4")],
     ["Arizona Diamondbacks", new TeamColors("#a71930")],
 
+    // TODO too dark in dark mode
     ["New York Mets", new TeamColors("#002d72")],
     ["Washington Nationals", new TeamColors("#ab0003")],
     ["Atlanta Braves", new TeamColors("#eaaa00")],
@@ -56,6 +58,7 @@ const TEAM_NAMES_TO_COLORS : Map<string, TeamColors> = new Map([
     ["Miami Marlins", new TeamColors("#ff6600")],
 
     ["Milwaukee Brewers", new TeamColors("#b6922e")],
+    // TODO too dark in dark mode?
     ["Chicago Cubs", new TeamColors("#0e3386")],
     ["Cincinnati Reds", new TeamColors("#c6011f")],
     ["St. Louis Cardinals", new TeamColors("#22205f", "#c41e3a")],
@@ -114,18 +117,49 @@ async function changeYear(year: string) {
             chartSection.appendChild(newDiv);
         }
 
+        const DARK_TEXT_COLOR = "#111111";
+        const LIGHT_TEXT_COLOR = "#eeeeee";
+        let textColor = isDark ? LIGHT_TEXT_COLOR : DARK_TEXT_COLOR;
         Plotly.newPlot( chartSection.children.item(index), plot_datas,
          {
-            title: raw_data.metadata[divisionId]['name'],
+            title: {
+                text: raw_data.metadata[divisionId]['name'],
+                font: {
+                    color: textColor
+                }
+            },
+            legend: {
+                font: {
+                    color: textColor
+                }
+            },
             xaxis: {
-                linecolor: isDark ? "#eeeeee" : "#111111"
+                linecolor: textColor,
+                title: {
+                    font: {
+                        color: textColor
+                    }
+                },
+                tickcolor: textColor,
+                tickfont: {
+                    color: textColor
+                },
             },
             yaxis: {
-                linecolor: isDark ? "#eeeeee" : "#111111",
-                zerolinecolor: isDark ? "#eeeeee" : "#111111"
+                linecolor: textColor,
+                title: {
+                    font: {
+                        color: textColor
+                    }
+                },
+                tickcolor: textColor,
+                tickfont: {
+                    color: textColor
+                },
+                zerolinecolor: textColor
             },
-            paper_bgcolor: isDark ? "#111111" : "#eeeeee",
-            plot_bgcolor: isDark ? "#111111" : "#eeeeee"
+            paper_bgcolor: isDark ? "#262626" : "#e6e6e6",
+            plot_bgcolor: isDark ? "#262626" : "#e6e6e6"
          });
         index++;
     }
