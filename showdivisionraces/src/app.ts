@@ -28,12 +28,41 @@ const TEAM_NAMES_TO_COLORS : Map<string, TeamColors> = new Map([
     ["Seattle Mariners", new TeamColors("#c4ced4")],
     ["Los Angeles Angels", new TeamColors("#862633")],
     ["Texas Rangers", new TeamColors("#c0111f")],
+
     // NYY blue #134a8e is too close to Blue Jays, use black for pinstripes
     ["New York Yankees", new TeamColors("#000000", "#c4ced3")],
     ["Baltimore Orioles", new TeamColors("#df4601")],
     ["Toronto Blue Jays", new TeamColors("#134a8e")],
     ["Tampa Bay Rays", new TeamColors("#f5d130")],
-    ["Boston Red Sox", new TeamColors("#bd3039")]
+    ["Boston Red Sox", new TeamColors("#bd3039")],
+
+    ["Chicago White Sox", new TeamColors("#c4ced4")],
+    ["Cleveland Indians", new TeamColors("#e31937")],
+    ["Detroit Tigers", new TeamColors("#f26722")],
+    ["Kansas City Royals", new TeamColors("#7bb2dd")],
+    ["Minnesota Twins", new TeamColors("#002b5c", "#cfac7a")],
+
+    ["San Francisco Giants", new TeamColors("#fd5a1e")],
+    // TODO lighten this color?
+    ["Los Angeles Dodgers", new TeamColors("#005a9c")],
+    ["San Diego Padres", new TeamColors("#847464", "#5c666f")],
+    ["Colorado Rockies", new TeamColors("#33006f", "#c4ced4")],
+    ["Arizona Diamondbacks", new TeamColors("#a71930")],
+
+    ["New York Mets", new TeamColors("#002d72")],
+    ["Washington Nationals", new TeamColors("#ab0003")],
+    ["Atlanta Braves", new TeamColors("#eaaa00")],
+    ["Philadelphia Phillies", new TeamColors("#e81828", "#284898")],
+    ["Miami Marlins", new TeamColors("#ff6600")],
+
+    ["Milwaukee Brewers", new TeamColors("#b6922e")],
+    ["Chicago Cubs", new TeamColors("#0e3386")],
+    ["Cincinnati Reds", new TeamColors("#c6011f")],
+    ["St. Louis Cardinals", new TeamColors("#22205f", "#c41e3a")],
+    //["Pittsburgh Pirates", new TeamColors("#000000", "#fdb827")]
+    // TODO - change color for light mode
+    ["Pittsburgh Pirates", new TeamColors("#fdb827", "#fdb827")]
+
 ]);
 
 function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: string[], date_values: Date[]) : any[] {
@@ -89,15 +118,14 @@ async function changeYear(year: string) {
          {
             title: raw_data.metadata[divisionId]['name'],
             xaxis: {
-                linecolor: isDark ? "#ffffff" : "#000000"
+                linecolor: isDark ? "#eeeeee" : "#111111"
             },
             yaxis: {
-                linecolor: isDark ? "#ffffff" : "#000000",
-                zerolinecolor: isDark ? "#ffffff" : "#000000"
+                linecolor: isDark ? "#eeeeee" : "#111111",
+                zerolinecolor: isDark ? "#eeeeee" : "#111111"
             },
-            paper_bgcolor: isDark ? "#000000" : "#ffffff",
-            plot_bgcolor: isDark ? "#000000" : "#ffffff",
-            fontcolor: isDark ? "#ffffff" : "#000000"
+            paper_bgcolor: isDark ? "#111111" : "#eeeeee",
+            plot_bgcolor: isDark ? "#111111" : "#eeeeee"
          });
         index++;
     }
