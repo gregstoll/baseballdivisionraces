@@ -134,29 +134,10 @@ async function changeYear(year: string) {
                 }
             },
             xaxis: {
-                linecolor: textColor,
-                title: {
-                    font: {
-                        color: textColor
-                    }
-                },
-                tickcolor: textColor,
-                tickfont: {
-                    color: textColor
-                },
+                color: textColor
             },
             yaxis: {
-                linecolor: textColor,
-                title: {
-                    font: {
-                        color: textColor
-                    }
-                },
-                tickcolor: textColor,
-                tickfont: {
-                    color: textColor
-                },
-                zerolinecolor: textColor
+                color: textColor
             },
             paper_bgcolor: isDark ? "#262626" : "#e6e6e6",
             plot_bgcolor: isDark ? "#262626" : "#e6e6e6"
