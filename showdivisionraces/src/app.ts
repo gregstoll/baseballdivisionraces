@@ -150,7 +150,7 @@ function isDarkMode() : boolean {
     return document.documentElement.getAttribute('color-mode') == 'dark';
 }
 
-const MIN_YEAR = 2015;
+const MIN_YEAR = 1995;
 const MAX_YEAR = 2021;
 function setupYearSelector() {
     let yearSelector = document.getElementById("yearSelect") as HTMLSelectElement;
