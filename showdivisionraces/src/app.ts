@@ -79,8 +79,7 @@ function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: strin
         const team_standings = all_standings.map(x => x[i]);
         const games_above_500 = team_standings.map(x => x[0] - x[1]);
         const hover_texts = team_standings.map(x => `${x[0]}-${x[1]}`);
-        // TODO - assert that we have one?
-        const team_colors = TEAM_NAMES_TO_COLORS.get(team_names[i]);
+        const team_colors = useTeamColors ? TEAM_NAMES_TO_COLORS.get(team_names[i]) : null;
         plot_datas.push({
             x: date_values,
             y: games_above_500,
@@ -176,6 +175,17 @@ function updateYearBasedOnSelector() {
     changeYear(newYear);
 }
 
+let useTeamColors = true;
+function setupTeamColorsRange() {
+    const teamColorsRange = document.getElementById("useTeamColorsRange") as HTMLInputElement;
+    useTeamColors = teamColorsRange.value === "1";
+    teamColorsRange.addEventListener('change', (event) => {
+        useTeamColors = (document.getElementById("useTeamColorsRange") as HTMLInputElement).value === "1";
+        updateYearBasedOnSelector();
+    });
+}
+
+
 // TODO - move to different .js file?
 if (window.CSS && CSS.supports("color", "var(--primary)")) {
     let toggleColorMode = function toggleColorMode(e) {
@@ -209,6 +219,7 @@ if (window.CSS && CSS.supports("color", "var(--primary)")) {
   }
 
 (async function() {
+    setupTeamColorsRange();
     setupYearSelector();
 })();
 
