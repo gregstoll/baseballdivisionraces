@@ -25,46 +25,46 @@ class TeamColors {
 const TEAM_NAMES_TO_COLORS : Map<string, TeamColors> = new Map([
     ["Houston Astros", new TeamColors("#eb6e1f")],
     ["Oakland Athletics", new TeamColors("#003831", "#efb21e")],
-    ["Seattle Mariners", new TeamColors("#c4ced4")],
+    // Lighten #005c5c to #00a0a0
+    ["Seattle Mariners", new TeamColors("#00a0a0", "#005c5c")],
     ["Los Angeles Angels", new TeamColors("#862633")],
     ["Texas Rangers", new TeamColors("#c0111f")],
 
     // NYY blue #134a8e is too close to Blue Jays, use black for pinstripes
     ["New York Yankees", new TeamColors("#000000", "#c4ced3")],
     ["Baltimore Orioles", new TeamColors("#df4601")],
-    // TODO too dark in dark mode
-    ["Toronto Blue Jays", new TeamColors("#134a8e")],
+    // Lighten #134a8e to #1d71d9
+    ["Toronto Blue Jays", new TeamColors("#134a8e", "#1d71d9")],
     ["Tampa Bay Rays", new TeamColors("#f5d130")],
     ["Boston Red Sox", new TeamColors("#bd3039")],
 
-    ["Chicago White Sox", new TeamColors("#c4ced4")],
+    // Darken #c4ced4 to #9dadb7
+    ["Chicago White Sox", new TeamColors("#9dadb7", "#c4ced4")],
     ["Cleveland Indians", new TeamColors("#e31937")],
     ["Detroit Tigers", new TeamColors("#f26722")],
     ["Kansas City Royals", new TeamColors("#7bb2dd")],
     ["Minnesota Twins", new TeamColors("#002b5c", "#cfac7a")],
 
     ["San Francisco Giants", new TeamColors("#fd5a1e")],
-    // TODO lighten this color?
     ["Los Angeles Dodgers", new TeamColors("#005a9c")],
     ["San Diego Padres", new TeamColors("#847464", "#5c666f")],
     ["Colorado Rockies", new TeamColors("#33006f", "#c4ced4")],
     ["Arizona Diamondbacks", new TeamColors("#a71930")],
 
-    // TODO too dark in dark mode
-    ["New York Mets", new TeamColors("#002d72")],
+    // Lighten #002d72 to #005ce9
+    ["New York Mets", new TeamColors("#002d72", "#005ce9")],
     ["Washington Nationals", new TeamColors("#ab0003")],
     ["Atlanta Braves", new TeamColors("#eaaa00")],
     ["Philadelphia Phillies", new TeamColors("#e81828", "#284898")],
     ["Miami Marlins", new TeamColors("#ff6600")],
 
     ["Milwaukee Brewers", new TeamColors("#b6922e")],
-    // TODO too dark in dark mode?
-    ["Chicago Cubs", new TeamColors("#0e3386")],
+    // Lighten #0e3386 to #1650d3
+    ["Chicago Cubs", new TeamColors("#1650d3")],
     ["Cincinnati Reds", new TeamColors("#c6011f")],
-    ["St. Louis Cardinals", new TeamColors("#22205f", "#c41e3a")],
-    //["Pittsburgh Pirates", new TeamColors("#000000", "#fdb827")]
-    // TODO - change color for light mode
-    ["Pittsburgh Pirates", new TeamColors("#fdb827", "#fdb827")]
+    // Lighten #c41e3a to #e03552
+    ["St. Louis Cardinals", new TeamColors("#e03552", "#e03552")],
+    ["Pittsburgh Pirates", new TeamColors("#000000", "#fdb827")]
 ]);
 TEAM_NAMES_TO_COLORS.set("California Angels", TEAM_NAMES_TO_COLORS.get("Los Angeles Angels"));
 TEAM_NAMES_TO_COLORS.set("Anaheim Angels", TEAM_NAMES_TO_COLORS.get("Los Angeles Angels"));

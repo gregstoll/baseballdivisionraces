@@ -1,5 +1,5 @@
-- choose appropriate team colors
 - check in data
+- toggle for team colors vs default colors
 - better hovertips
   - show all team data at once?
   - formatting on hovertip?
