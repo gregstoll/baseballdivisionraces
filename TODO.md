@@ -1,13 +1,15 @@
+- choose appropriate team colors
+ - write script to check for missing team names
+- check in data
 - better hovertips
   - show all team data at once?
   - formatting on hovertip?
-- choose appropriate team colors
-- gather data from earlier years
 - set up hash to point to year
+- make script able to incrementally update existing file
 - light/dark mode
 - fill out HTML page
 
+---
 
-
-- Use [Plotly](https://plotly.com/javascript/) for JS graph 
-  - the webpack build is huge, maybe use CDN instead?
+- the webpack build is huge, maybe use CDN for Plotly instead?
+  - maybe use [webpack externals](https://webpack.js.org/configuration/externals/)?
