@@ -11,10 +11,10 @@ if __name__ == '__main__':
                 for divisionId in data_json['metadata'].keys():
                     teamNames.update(data_json['metadata'][divisionId]['teams'])
     
+    print(teamNames)
     with open('../showdivisionraces/src/app.ts', 'r') as file:
         lines = file.readlines()
         for teamName in teamNames:
             searchString = f'"{teamName}"'
             if len([line for line in lines if searchString in line]) == 0:
                 print(f"MISSING TEAM: {teamName}")
-    print(teamNames)

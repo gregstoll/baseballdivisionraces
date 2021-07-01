@@ -65,8 +65,12 @@ const TEAM_NAMES_TO_COLORS : Map<string, TeamColors> = new Map([
     //["Pittsburgh Pirates", new TeamColors("#000000", "#fdb827")]
     // TODO - change color for light mode
     ["Pittsburgh Pirates", new TeamColors("#fdb827", "#fdb827")]
-
 ]);
+TEAM_NAMES_TO_COLORS.set("California Angels", TEAM_NAMES_TO_COLORS.get("Los Angeles Angels"));
+TEAM_NAMES_TO_COLORS.set("Anaheim Angels", TEAM_NAMES_TO_COLORS.get("Los Angeles Angels"));
+TEAM_NAMES_TO_COLORS.set("Tampa Bay Devil Rays", TEAM_NAMES_TO_COLORS.get("Tampa Bay Rays"));
+TEAM_NAMES_TO_COLORS.set("Florida Marlins", TEAM_NAMES_TO_COLORS.get("Miami Marlins"));
+TEAM_NAMES_TO_COLORS.set("Montreal Expos", TEAM_NAMES_TO_COLORS.get("Washington Nationals"));
 
 function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: string[], date_values: Date[]) : any[] {
     let plot_datas = [];
