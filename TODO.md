@@ -1,5 +1,4 @@
 - choose appropriate team colors
- - write script to check for missing team names
 - check in data
 - better hovertips
   - show all team data at once?
