@@ -33,6 +33,9 @@ module.exports = {
   resolve: {
     extensions: ['.tsx', '.ts', '.js']
   },
+  externals: {
+    'plotly.js-basic-dist-min': 'Plotly'
+  },
   output: {
     filename: 'app.bundle.js',
     path: path.resolve(paths.dist,"dist"),

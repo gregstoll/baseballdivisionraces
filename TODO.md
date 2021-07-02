@@ -9,6 +9,3 @@
 - fill out HTML page
 
 ---
-
-- the webpack build is huge, maybe use CDN for Plotly instead?
-  - maybe use [webpack externals](https://webpack.js.org/configuration/externals/)?
