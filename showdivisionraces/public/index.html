@@ -28,6 +28,50 @@
           width: 100%;
           height: 20%; /* TODO */
         }
+        /* TODO extract this? */
+        /* https://www.geeksforgeeks.org/how-to-create-toggle-switch-by-using-html-and-css/ */
+        /* toggle in label designing */
+    .toggle {
+        position : relative ;
+        display : inline-block;
+        width : 40px;
+        height : 22px;
+        background-color: #cccccc;
+        background-color: var(--element3, #cccccc);
+        border-radius: 10px;
+        border: 2px solid gray;
+    }
+            
+    /* After slide changes */
+    .toggle:after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: gray;
+        top: 1px; 
+        left: 1px;
+        transition:  all 0.5s;
+    }
+                
+    /* Checkbox cheked effect */
+    .checkbox:checked + .toggle::after {
+        left : 19px; 
+    }
+            
+    /* Checkbox cheked toggle label bg color */
+    .checkbox:checked + .toggle {
+        background-color: #262626;
+        background-color: var(--surface1, #262626);
+    }
+            
+    /* Checkbox vanished */
+    .checkbox { 
+        display : none;
+    }
+
+
         /* TODO extract this */
         
         :root[color-mode="light"] {
@@ -205,7 +249,12 @@ html {
           </svg>
         </button>
         <div>
-          <input type="range" id="useTeamColorsRange" min="0" max="1" value="1" style="width: 50px;"><span for="useTeamColorsRange">Use team colors</span>
+          <div style="float: left;">
+            <input type="checkbox" id="useTeamColorsCheckbox" class="checkbox" checked><span class="toggle" id="useTeamColorsBackground"></span>
+          </div>
+          <div style="float: left; margin-left: 8px; vertical-align: middle;">
+            <label for="useTeamColorsCheckbox">Use team colors</label>
+          </div>
         </div>
       </header>
         <div style="width: 100%; text-align: center;">

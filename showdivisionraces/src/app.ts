@@ -177,11 +177,23 @@ function updateYearBasedOnSelector() {
 
 let useTeamColors = true;
 function setupTeamColorsRange() {
-    const teamColorsRange = document.getElementById("useTeamColorsRange") as HTMLInputElement;
-    useTeamColors = teamColorsRange.value === "1";
-    teamColorsRange.addEventListener('change', (event) => {
-        useTeamColors = (document.getElementById("useTeamColorsRange") as HTMLInputElement).value === "1";
-        updateYearBasedOnSelector();
+    const teamColorsCheckbox = document.getElementById("useTeamColorsCheckbox") as HTMLInputElement;
+    useTeamColors = teamColorsCheckbox.checked;
+    // this one gets triggered if the label gets clicked
+    teamColorsCheckbox.addEventListener('change', (event) => {
+        useTeamColors = (document.getElementById("useTeamColorsCheckbox") as HTMLInputElement).checked;
+        // sigh, if we do this immediately the slider freezes until the thread gets unblocked? anyway,
+        // just delay a little
+        window.setTimeout(() => updateYearBasedOnSelector(), 200);
+    });
+    // this one gets triggered if the toggle background gets clicked
+    document.getElementById("useTeamColorsBackground").addEventListener('click', (event) => {
+        let checkbox = (document.getElementById("useTeamColorsCheckbox") as HTMLInputElement);
+        checkbox.checked = !checkbox.checked;
+        useTeamColors = (document.getElementById("useTeamColorsCheckbox") as HTMLInputElement).checked;
+        // sigh, if we do this immediately the slider freezes until the thread gets unblocked? anyway,
+        // just delay a little
+        window.setTimeout(() => updateYearBasedOnSelector(), 200);
     });
 }
 
