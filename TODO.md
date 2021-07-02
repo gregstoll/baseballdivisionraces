@@ -1,4 +1,3 @@
-- check in data
 - better hovertips
   - show all team data at once?
   - formatting on hovertip?
