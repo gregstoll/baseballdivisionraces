@@ -185,7 +185,7 @@ function isDarkMode() : boolean {
 
 const MIN_YEAR = 1995;
 const MAX_YEAR = 2021;
-function setupYearSelector() {
+function setupYearSelector(state: State) {
     let yearSelector = document.getElementById("yearSelect") as HTMLSelectElement;
     for (let year = MIN_YEAR; year <= MAX_YEAR; ++year) {
         let option = document.createElement("option");
@@ -196,19 +196,21 @@ function setupYearSelector() {
     yearSelector.addEventListener('change', (event) => {
         updateYearBasedOnSelector();
     });
-    yearSelector.selectedIndex = yearSelector.children.length - 1;
-    changeYear(MAX_YEAR.toString());
+    yearSelector.selectedIndex = state.year - MIN_YEAR;
+    changeYear(state.year.toString());
 }
 
 function updateYearBasedOnSelector() {
     const newYear = (document.getElementById("yearSelect") as HTMLSelectElement).value;
+    window.location.hash = getNewQueryHash(parseInt(newYear, 10), useTeamColors);
     changeYear(newYear);
 }
 
 let useTeamColors = true;
-function setupTeamColorsRange() {
+function setupTeamColorsCheckbox(state: State) {
     const teamColorsCheckbox = document.getElementById("useTeamColorsCheckbox") as HTMLInputElement;
-    useTeamColors = teamColorsCheckbox.checked;
+    teamColorsCheckbox.checked = state.useTeamColors;
+    useTeamColors = state.useTeamColors;
     // this one gets triggered if the label gets clicked
     teamColorsCheckbox.addEventListener('change', (event) => {
         useTeamColors = (document.getElementById("useTeamColorsCheckbox") as HTMLInputElement).checked;
@@ -253,15 +255,58 @@ if (window.CSS && CSS.supports("color", "var(--primary)")) {
     toggleColorButtons.forEach(function(btn) {
       btn.addEventListener("click", toggleColorMode);
     });
-  } else {
+} else {
     // If the feature isn't supported, then we hide the toggle buttons
     //TODO - does this work?
     let btnContainer = document.querySelector(".color-mode__header") as HTMLHeadingElement;
     btnContainer.style.display = "none";
-  }
+}
+
+interface State {
+    year: number,
+    useTeamColors: boolean
+}
+function parseQueryHash(): State {
+    let state : State = { year: MAX_YEAR, useTeamColors: true };
+    if (!window.location.hash) {
+        return state;
+    }
+    let hash = window.location.hash.substring(1);
+    let parts = hash.split('.');
+    for (let part of parts) {
+        if (part.startsWith("useTeamColors=")) {
+            let rest = part.substring("useTeamColors=".length);
+            if (rest === '0') {
+                state.useTeamColors = false;
+            }
+        }
+        else {
+            let year = parseInt(part, 10);
+            if (year >= MIN_YEAR && year <= MAX_YEAR) {
+                state.year = year;
+            }
+        }
+    }
+    return state;
+}
+function getNewQueryHash(year: number, useTeamColors: boolean): string {
+    let hash = "";
+    if (year != MAX_YEAR) {
+        hash += year.toString();
+    }
+    if (!useTeamColors) {
+        if (hash.length > 0) {
+            hash += '.';
+        }
+        hash += "useTeamColors=0";
+    }
+    return hash;
+}
+
 
 (async function() {
-    setupTeamColorsRange();
-    setupYearSelector();
+    let state = parseQueryHash();
+    setupTeamColorsCheckbox(state);
+    setupYearSelector(state);
 })();
 
