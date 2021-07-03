@@ -108,6 +108,21 @@ function get_division_leader_games_over_500(all_standings: Array<Array<number[]>
     return day_indices.map(i => Math.max(...team_indices.map(t => all_standings[i][t][0] - all_standings[i][t][1])));
 }
 
+function get_division_name_sort_key(division_name: string): number {
+    let key = 0;
+    // AL before NL, then West, Central, East
+    if (division_name.indexOf("National League") >= 0) {
+        key += 100;
+    }
+    if (division_name.indexOf("Central") >= 0) {
+        key += 1;
+    }
+    if (division_name.indexOf("East") >= 0) {
+        key += 2;
+    }
+    return key;
+}
+
 async function changeYear(year: string) {
     let response = await fetch(`data/${year}.json`);
     let raw_data : any = await response.json();
@@ -116,8 +131,9 @@ async function changeYear(year: string) {
     const opening_day : Date = new Date(opening_day_str_parts[0], opening_day_str_parts[1] - 1, opening_day_str_parts[2]);
     let index = 0;
     const isDark = isDarkMode();
-    // TODO - sort divisions somehow?
-    for (let divisionId of Object.keys(raw_data.metadata)) { 
+    let divisionIds = Object.keys(raw_data.metadata);
+    divisionIds.sort((a, b) => get_division_name_sort_key(raw_data.metadata[a]['name']) - get_division_name_sort_key(raw_data.metadata[b]['name']));
+    for (let divisionId of divisionIds) {
         const team_names : string[] = raw_data.metadata[divisionId]['teams'];
         const all_standings : Array<Array<number[]>> = raw_data.standings.map(x => x[divisionId]);
         const astros_standings = all_standings.map(x => x[0]);
