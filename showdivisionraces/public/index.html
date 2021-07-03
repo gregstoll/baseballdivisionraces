@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.plot.ly/plotly-2.2.0.min.js"></script>
     <script>
       //https://ryanfeigenbaum.com/dark-mode/
       // This code assumes a Light Mode default
@@ -17,9 +16,8 @@
           document.documentElement.setAttribute('color-mode', 'dark')
       }
     </script>
-    <!-- <link rel="canonical" href="https://gregstoll.com/populationcenters" /> -->
+    <!-- TODO <link rel="canonical" href="https://gregstoll.com/populationcenters" /> -->
     <title>MLB Division Race Charts</title>
-    <!--<script src="https://cdn.plot.ly/plotly-2.1.0.min.js"></script>-->
     <style>
         div.container {
           max-width: 800px;
@@ -205,6 +203,10 @@ html {
   fill: #fff7d6;
   fill: var(--tertiary, #fff7d6);
 }
+
+#about {
+  align-self: flex-start;
+}
     </style>
     <ssihead />
   </head>
@@ -257,6 +259,7 @@ html {
           </div>
         </div>
       </header>
+    <p><a href="#about">About this project</a></p>
         <div style="width: 100%; text-align: center;">
             <h1 style="display: inline-block;">MLB Division Race Charts</h1>
             <p><select id="yearSelect"></select></p>
@@ -264,8 +267,12 @@ html {
 
             </div>
         </div>
-    <p><a href="#about">About this project</a></p>
-    <p id="about"><b>About this project:</b> TODO</p>
+    <div id="about">
+      <p><b>About this project:</b> This is a graph of each MLB team's games above or below .500.</p>
+
+    </div>
+    <!-- TODO - include github link -->
+    <script src="https://cdn.plot.ly/plotly-2.2.0.min.js"></script>
     <script type="text/javascript" src="dist/app.bundle.js"></script>
     <ssibodybottom />
     </div>
