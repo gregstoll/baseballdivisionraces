@@ -75,15 +75,17 @@ TEAM_NAMES_TO_COLORS.set("Montreal Expos", TEAM_NAMES_TO_COLORS.get("Washington 
 function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: string[], date_values: Date[]) : any[] {
     let plot_datas = [];
     const isDark = isDarkMode();
+    const division_leader_games_above_500 = get_division_leader_games_over_500(all_standings);
     for (let i = 0; i < team_names.length; ++i) {
         const team_standings = all_standings.map(x => x[i]);
         const games_above_500 = team_standings.map(x => x[0] - x[1]);
-        const hover_texts = team_standings.map(x => `${x[0]}-${x[1]}`);
+        const hover_texts = team_standings.map((x, i) => `${x[0]}-${x[1]}\n${get_games_back_string(x, division_leader_games_above_500[i])}`);
         const team_colors = useTeamColors ? TEAM_NAMES_TO_COLORS.get(team_names[i]) : null;
         plot_datas.push({
             x: date_values,
             y: games_above_500,
             text: hover_texts,
+            hoverinfo: "text",
             name: team_names[i],
             line: {
                 color: isDark ? team_colors?.dark : team_colors?.light,
@@ -93,6 +95,17 @@ function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: strin
     }
     plot_datas.sort((data1, data2) => data2.y[data2.y.length - 1] - data1.y[data1.y.length - 1]);
     return plot_datas;
+}
+
+function get_games_back_string(team_standing: number[], leader_games_above_500: number): string {
+    const games_back = leader_games_above_500 - (team_standing[0] - team_standing[1]);
+    return games_back === 0 ? "-" : `${games_back/2} GB`;
+}
+
+function get_division_leader_games_over_500(all_standings: Array<Array<number[]>>): number[] {
+    const day_indices = Array.from(new Array(all_standings.length).keys());
+    const team_indices = Array.from(new Array(all_standings[0].length).keys());
+    return day_indices.map(i => Math.max(...team_indices.map(t => all_standings[i][t][0] - all_standings[i][t][1])));
 }
 
 async function changeYear(year: string) {
@@ -142,6 +155,7 @@ async function changeYear(year: string) {
             yaxis: {
                 color: textColor
             },
+            hovermode: "x",
             paper_bgcolor: isDark ? "#262626" : "#e6e6e6",
             plot_bgcolor: isDark ? "#262626" : "#e6e6e6"
          });
