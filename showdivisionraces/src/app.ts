@@ -85,7 +85,7 @@ function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: strin
             x: date_values,
             y: games_above_500,
             text: hover_texts,
-            hoverinfo: "text",
+            hoverinfo: "text+x",
             name: team_names[i],
             line: {
                 color: isDark ? team_colors?.dark : team_colors?.light,
