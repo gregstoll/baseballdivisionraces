@@ -4,6 +4,7 @@ import json
 import os
 import time
 import sys
+from pathlib import Path
 from typing import NewType, Optional
 
 import statsapi
@@ -132,7 +133,8 @@ class MlbYearStandings:
         self._get_all_data(opening_day)
 
     def write_to_json(self):
-        os.makedirs('data', exist_ok=True)
+        data_path = Path(os.path.realpath(__file__)).parent / "data"
+        os.makedirs(data_path, exist_ok=True)
         j = {}
         j['metadata'] = { k: {"name": self.metadata.id_to_division_info_dict[k].name,
                               "teams": self.metadata.id_to_division_info_dict[k].team_names} for k in self.metadata.id_to_division_info_dict}
@@ -143,7 +145,7 @@ class MlbYearStandings:
             return {k:[[standing.wins, standing.losses] for standing in day_data[k]] for k in day_data.keys()}
         j['standings'] = [day_data_to_json(self.all_day_data[day]) for day in all_days]
 
-        with open(f"data/{self.metadata.year}.json", 'w') as f:
+        with open(data_path / f"{self.metadata.year}.json", 'w') as f:
             f.write(json.dumps(j))
 
     def _get_all_data(self, opening_day: datetime.date):
