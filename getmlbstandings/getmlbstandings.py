@@ -313,9 +313,13 @@ def get_raw_standings_data(date: datetime.date) -> dict:
 #sys.exit(1)
 
 if __name__ == '__main__':
-    year = 2020
+    year = datetime.date.today().year
+    update = False
     if len(sys.argv) > 1:
-        year = int(sys.argv[1])
+        if sys.argv[1] == '-u':
+            update = True
+        else:
+            year = int(sys.argv[1])
     m = MlbMetadata.get_metadata(year)
     import pprint
     pp = pprint.PrettyPrinter(indent=2)
