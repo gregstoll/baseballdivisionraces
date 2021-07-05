@@ -174,7 +174,8 @@ async function changeYear(year: string) {
             hovermode: "x",
             paper_bgcolor: isDark ? "#262626" : "#e6e6e6",
             plot_bgcolor: isDark ? "#262626" : "#e6e6e6"
-         });
+         },
+         {responsive: true});
         index++;
     }
 }
