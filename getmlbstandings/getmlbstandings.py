@@ -58,9 +58,9 @@ class MlbMetadata:
         return str(self)
 
     @classmethod
-    def get_metadata(cls, year: int) -> MlbMetadata:
+    def get_metadata(cls, year: int, quiet: boolean) -> MlbMetadata:
         # pick a day in the middle of the season (even in 2020)
-        raw_data = get_raw_standings_data(datetime.date(year=year, month=8, day=1))
+        raw_data = get_raw_standings_data(datetime.date(year=year, month=8, day=1), quiet)
         metadata = cls(year)
         for division_id in raw_data:
             metadata.add_division_info(DivisionId(division_id), raw_data[division_id])
@@ -121,14 +121,16 @@ def day_data_equals(data1: dict[DivisionId, list[TeamStanding]], data2: Optional
     return True
 
 class MlbYearStandings:
-    def __init__(self, metadata: MlbMetadata):
+    def __init__(self, metadata: MlbMetadata, quiet: boolean):
         self.metadata = metadata
+        self.quiet = quiet
         self.all_day_data : dict[datetime.date, dict[DivisionId, list[TeamStanding]]] = dict()
     
     def populate(self):
         # first, find opening day
         opening_day = self._get_opening_day()
-        print(f"Opening day is {opening_day}")
+        if not self.quiet:
+            print(f"Opening day is {opening_day}")
         self._add_before_opening_day_data(previous_day(opening_day))
         self._get_all_data(opening_day)
 
@@ -155,7 +157,7 @@ class MlbYearStandings:
             if current_day >= datetime.date.today():
                 return
             if current_day not in self.all_day_data:
-                data = get_raw_standings_data(current_day)
+                data = get_raw_standings_data(current_day, self.quiet)
                 if not data_is_empty(data):
                     self._store_day_data(current_day, data)
                 else:
@@ -185,7 +187,7 @@ class MlbYearStandings:
 
     def _get_opening_day(self) -> datetime.date:
         opening_day_attempt = get_opening_day_guess(self.metadata.year)
-        opening_day_data = get_raw_standings_data(opening_day_attempt)
+        opening_day_data = get_raw_standings_data(opening_day_attempt, self.quiet)
         if not data_is_before_opening_day(opening_day_data):
             opening_day = self._search_backward_for_opening_day(opening_day_attempt, opening_day_data)
         else:
@@ -196,13 +198,13 @@ class MlbYearStandings:
         while not data_is_before_opening_day(opening_day_data):
             self._store_day_data(opening_day_attempt, opening_day_data)
             opening_day_attempt = previous_day(opening_day_attempt)
-            opening_day_data = get_raw_standings_data(opening_day_attempt)
+            opening_day_data = get_raw_standings_data(opening_day_attempt, self.quiet)
         return next_day(opening_day_attempt)
     
     def _search_forward_for_opening_day(self, opening_day_attempt: datetime.date, opening_day_data) -> datetime.date:
         while data_is_before_opening_day(opening_day_data):
             opening_day_attempt = next_day(opening_day_attempt)
-            opening_day_data = get_raw_standings_data(opening_day_attempt)
+            opening_day_data = get_raw_standings_data(opening_day_attempt, self.quiet)
         self._store_day_data(opening_day_attempt, opening_day_data)
         return opening_day_attempt
     
@@ -296,9 +298,10 @@ class MlbYearStandings:
         return str(self)
 
 
-def get_raw_standings_data(date: datetime.date) -> dict:
+def get_raw_standings_data(date: datetime.date, quiet: boolean) -> dict:
     date_str = date.strftime('%m/%d/%Y')
-    print(f"getting for {date_str}")
+    if not quiet:
+        print(f"getting for {date_str}")
     # throttle
     time.sleep(0.3)
     standings : dict = statsapi.standings_data(leagueId="103,104", date=date_str)
@@ -322,12 +325,12 @@ if __name__ == '__main__':
             update = True
         else:
             year = int(sys.argv[1])
-    m = MlbMetadata.get_metadata(year)
+    m = MlbMetadata.get_metadata(year, quiet=update)
     import pprint
     pp = pprint.PrettyPrinter(indent=2)
     #pp.pprint(m)
     #sys.exit(1)
-    s = MlbYearStandings(m)
+    s = MlbYearStandings(m, quiet=update)
     s.populate()
     validated = s.validate_and_fix_data()
     if not validated:
