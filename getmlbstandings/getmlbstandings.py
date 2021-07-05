@@ -58,7 +58,7 @@ class MlbMetadata:
         return str(self)
 
     @classmethod
-    def get_metadata(cls, year: int, quiet: boolean) -> MlbMetadata:
+    def get_metadata(cls, year: int, quiet: bool) -> MlbMetadata:
         # pick a day in the middle of the season (even in 2020)
         raw_data = get_raw_standings_data(datetime.date(year=year, month=8, day=1), quiet)
         metadata = cls(year)
@@ -121,7 +121,7 @@ def day_data_equals(data1: dict[DivisionId, list[TeamStanding]], data2: Optional
     return True
 
 class MlbYearStandings:
-    def __init__(self, metadata: MlbMetadata, quiet: boolean):
+    def __init__(self, metadata: MlbMetadata, quiet: bool):
         self.metadata = metadata
         self.quiet = quiet
         self.all_day_data : dict[datetime.date, dict[DivisionId, list[TeamStanding]]] = dict()
@@ -298,7 +298,7 @@ class MlbYearStandings:
         return str(self)
 
 
-def get_raw_standings_data(date: datetime.date, quiet: boolean) -> dict:
+def get_raw_standings_data(date: datetime.date, quiet: bool) -> dict:
     date_str = date.strftime('%m/%d/%Y')
     if not quiet:
         print(f"getting for {date_str}")
