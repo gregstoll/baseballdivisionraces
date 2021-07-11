@@ -91,7 +91,10 @@ class TeamStanding:
         return str(self)
 
     def eq(self, o: TeamStanding) -> bool:
-        return self.team_id == o.team_id and self.wins == o.wins and self.losses == o.losses
+        # don't worry about Nones
+        if self.team_id is not None and o.team_id is not None and self.team_id != o.team_id:
+            return False
+        return self.wins == o.wins and self.losses == o.losses
 
 def next_day(date: datetime.date) -> datetime.date:
     return datetime.date.fromordinal(date.toordinal() + 1)
@@ -359,7 +362,8 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1] == '-u':
             update = True
-            # update always uses current year
+            if len(sys.argv) > 2:
+                year = int(sys.argv[2])
         else:
             year = int(sys.argv[1])
     import pprint
