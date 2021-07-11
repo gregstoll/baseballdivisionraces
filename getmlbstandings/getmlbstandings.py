@@ -33,26 +33,17 @@ class DivisionInfo:
 class MlbMetadata:
     def __init__(self, year: int):
         self.id_to_division_info_dict : dict[DivisionId, DivisionInfo] = dict()
-        self.id_to_team_name_dict : dict[TeamId, str] = dict()
-        self.team_name_to_id_dict : dict[str, TeamId] = dict()
         self.year = year
     
     def add_division_info(self, division_id: DivisionId, division_json):
         di = DivisionInfo(division_id, division_json['div_name'])
         for team_json in division_json['teams']:
             di.team_names.append(team_json['name'])
-            self.add_team_info(team_json)
         di.team_names.sort()
         self.id_to_division_info_dict[division_id] = di
 
-    def add_team_info(self, team_json):
-        team_id = TeamId(team_json['team_id'])
-        team_name : str = team_json['name']
-        self.id_to_team_name_dict[team_id] = team_name
-        self.team_name_to_id_dict[team_name] = team_id
-
     def __str__(self):
-        return f"{str(self.id_to_division_info_dict)}\n{str(self.id_to_team_name_dict)}"
+        return f"{str(self.id_to_division_info_dict)}"
 
     def __repr__(self):
         return str(self)
@@ -66,9 +57,29 @@ class MlbMetadata:
             metadata.add_division_info(DivisionId(division_id), raw_data[division_id])
         metadata.year = year
         return metadata
+    
+    @classmethod
+    def load_from_file(cls, year: int) -> Optional[MlbMetadata]:
+        file_path = get_json_file_path(year)
+        if not file_path.exists():
+            return None
+        try:
+            with open(file_path, 'r') as f:
+                j = json.load(f)
+                metadata = cls(year)
+                metadataJson = j['metadata']
+                for division_id in metadataJson.keys():
+                    divisionInfoJson = metadataJson[division_id]
+                    divisionInfo = DivisionInfo(division_id, divisionInfoJson['name'])
+                    divisionInfo.team_names = divisionInfoJson['teams']
+                    metadata.id_to_division_info_dict[division_id] = divisionInfo
+                return metadata
+        except json.JSONDecodeError:
+            return None
+
 
 class TeamStanding:
-    def __init__(self, team_id: TeamId, wins: int, losses: int):
+    def __init__(self, team_id: Optional[TeamId], wins: int, losses: int):
         self.team_id = team_id
         self.wins = wins
         self.losses = losses
@@ -120,43 +131,67 @@ def day_data_equals(data1: dict[DivisionId, list[TeamStanding]], data2: Optional
                 return False
     return True
 
+def get_json_file_path(year: int) -> Path:
+    data_path = Path(os.path.realpath(__file__)).parent / "data"
+    return data_path / f"{year}.json"
+
 class MlbYearStandings:
     def __init__(self, metadata: MlbMetadata, quiet: bool):
         self.metadata = metadata
         self.quiet = quiet
         self.all_day_data : dict[datetime.date, dict[DivisionId, list[TeamStanding]]] = dict()
     
+    def load_from_file(self):
+        file_path = get_json_file_path(self.metadata.year)
+        # if we're calling this we already know the file exists and is valid
+        with open(file_path, 'r') as f:
+            j = json.load(f)
+            current_day = datetime.datetime.strptime(j['opening_day'], "%Y/%m/%d").date()
+            for entry in j['standings']:
+                day_data : dict[DivisionId, list[TeamStanding]] = {}
+                for division_id in entry:
+                    standings = [TeamStanding(None, wl[0], wl[1]) for wl in entry[division_id]]
+                    day_data[DivisionId(int(division_id))] = standings
+                self.all_day_data[current_day] = day_data
+                current_day = next_day(current_day)
+
     def populate(self):
-        # first, find opening day
-        opening_day = self._get_opening_day()
-        if not self.quiet:
-            print(f"Opening day is {opening_day}")
-        self._add_before_opening_day_data(previous_day(opening_day))
-        self._get_all_data(opening_day)
+        if len(self.all_day_data) == 0:
+            # first, find opening day
+            opening_day = self._get_opening_day()
+            if not self.quiet:
+                print(f"Opening day is {opening_day}")
+            self._add_before_opening_day_data(previous_day(opening_day))
+            self._get_all_data(opening_day)
+        else:
+            # get all data starting at last day (because it might be out of date if more games happened)
+            all_days = sorted(self.all_day_data.keys())
+            last_day = all_days[-1]
+            self._get_all_data(last_day)
 
     def write_to_json(self):
-        data_path = Path(os.path.realpath(__file__)).parent / "data"
-        os.makedirs(data_path, exist_ok=True)
+        file_path = get_json_file_path(self.metadata.year)
+        os.makedirs(file_path.parent, exist_ok=True)
         j = {}
         j['metadata'] = { k: {"name": self.metadata.id_to_division_info_dict[k].name,
-                              "teams": self.metadata.id_to_division_info_dict[k].team_names} for k in self.metadata.id_to_division_info_dict}
+                              "teams": self.metadata.id_to_division_info_dict[k].team_names} for k in sorted(self.metadata.id_to_division_info_dict)}
         all_days = sorted(self.all_day_data.keys())
         opening_day = all_days[0]
         j['opening_day'] = opening_day.strftime("%Y/%m/%d")
         def day_data_to_json(day_data: dict[DivisionId, list[TeamStanding]]) -> dict:
-            return {k:[[standing.wins, standing.losses] for standing in day_data[k]] for k in day_data.keys()}
+            return {k:[[standing.wins, standing.losses] for standing in day_data[k]] for k in sorted(day_data.keys())}
         j['standings'] = [day_data_to_json(self.all_day_data[day]) for day in all_days]
 
-        with open(data_path / f"{self.metadata.year}.json", 'w') as f:
+        with open(file_path, 'w') as f:
             f.write(json.dumps(j))
 
-    def _get_all_data(self, opening_day: datetime.date):
-        current_day = next_day(opening_day)
+    def _get_all_data(self, start_day: datetime.date, force_update: bool = False):
+        current_day = start_day
         previous_day_data = []
         while True:
             if current_day >= datetime.date.today():
                 return
-            if current_day not in self.all_day_data:
+            if current_day not in self.all_day_data or force_update:
                 data = get_raw_standings_data(current_day, self.quiet)
                 if not data_is_empty(data):
                     self._store_day_data(current_day, data)
@@ -227,7 +262,7 @@ class MlbYearStandings:
             before_opening_day_data[division_id] = division_data
         self.all_day_data[date_before_opening_day] = before_opening_day_data
 
-    def validate_and_fix_data(self, already_fixed_beginning=False) -> bool:
+    def validate_and_fix_data(self, already_fixed_beginning=False, is_update=False) -> bool:
         all_days = sorted(self.all_day_data.keys())
         opening_day = all_days[0]
         opening_day_data = self.all_day_data[opening_day]
@@ -247,8 +282,9 @@ class MlbYearStandings:
                     return False
                 for (today_ts, yesterday_ts) in zip(today_division_data, yesterday_division_data):
                     if today_ts.team_id != yesterday_ts.team_id:
-                        print(f"Team IDs out of order - today {today} today_division_data {today_division_data} yesterday_division_data {yesterday_division_data}")
-                        return False
+                        if not (is_update and (yesterday_ts.team_id is None or today_ts.team_id is None)):
+                            print(f"Team IDs out of order - today {today} today_division_data {today_division_data} yesterday_division_data {yesterday_division_data}")
+                            return False
                     game_diff = (today_ts.wins + today_ts.losses) - (yesterday_ts.wins + yesterday_ts.losses)
                     if game_diff > 2:
                         print(f"Jump in games played on {today} in {division_id} from {yesterday_ts} to {today_ts}! Attempting to fix.")
@@ -323,16 +359,24 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1] == '-u':
             update = True
+            # update always uses current year
         else:
             year = int(sys.argv[1])
-    m = MlbMetadata.get_metadata(year, quiet=update)
     import pprint
     pp = pprint.PrettyPrinter(indent=2)
+    m = None
+    if update:
+        m = MlbMetadata.load_from_file(year)
     #pp.pprint(m)
+    if m is None:
+        update = False
+        m = MlbMetadata.get_metadata(year, quiet=update)
     #sys.exit(1)
     s = MlbYearStandings(m, quiet=update)
+    if update:
+        s.load_from_file()
     s.populate()
-    validated = s.validate_and_fix_data()
+    validated = s.validate_and_fix_data(is_update=update)
     if not validated:
         print("--------------")
         print("FAILED to validate data, writing anyway")
