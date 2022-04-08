@@ -40,7 +40,7 @@ const TEAM_NAMES_TO_COLORS : Map<string, TeamColors> = new Map([
 
     // Darken #c4ced4 to #9dadb7
     ["Chicago White Sox", new TeamColors("#9dadb7", "#c4ced4")],
-    ["Cleveland Indians", new TeamColors("#e31937")],
+    ["Cleveland Guardians", new TeamColors("#e31937")],
     ["Detroit Tigers", new TeamColors("#f26722")],
     ["Kansas City Royals", new TeamColors("#7bb2dd")],
     ["Minnesota Twins", new TeamColors("#002b5c", "#cfac7a")],
@@ -66,6 +66,7 @@ const TEAM_NAMES_TO_COLORS : Map<string, TeamColors> = new Map([
     ["St. Louis Cardinals", new TeamColors("#e03552", "#e03552")],
     ["Pittsburgh Pirates", new TeamColors("#000000", "#fdb827")]
 ]);
+TEAM_NAMES_TO_COLORS.set("Cleveland Indians", TEAM_NAMES_TO_COLORS.get("Cleveland Guardians"));
 TEAM_NAMES_TO_COLORS.set("California Angels", TEAM_NAMES_TO_COLORS.get("Los Angeles Angels"));
 TEAM_NAMES_TO_COLORS.set("Anaheim Angels", TEAM_NAMES_TO_COLORS.get("Los Angeles Angels"));
 TEAM_NAMES_TO_COLORS.set("Tampa Bay Devil Rays", TEAM_NAMES_TO_COLORS.get("Tampa Bay Rays"));
@@ -185,7 +186,7 @@ function isDarkMode() : boolean {
 }
 
 const MIN_YEAR = 1995;
-const MAX_YEAR = 2021;
+const MAX_YEAR = 2022;
 function setupYearSelector(state: State) {
     let yearSelector = document.getElementById("yearSelect") as HTMLSelectElement;
     for (let year = MIN_YEAR; year <= MAX_YEAR; ++year) {
