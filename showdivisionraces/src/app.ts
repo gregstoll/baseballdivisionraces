@@ -168,6 +168,24 @@ function addChart(title: string, team_names: string[], all_standings: Array<Arra
         {responsive: true});
 }
 
+function addLeagueChart(raw_data: any, league_name: string, index: number, opening_day: Date) {
+    const league_division_ids = Object.keys(raw_data.metadata).filter(x => raw_data.metadata[x]['name'].startsWith(league_name));
+    let league_team_names : string[] = [];
+    let league_all_standings : Array<Array<number[]>> = [];
+    for (const league_division_id of league_division_ids) {
+        league_team_names.push(...raw_data.metadata[league_division_id]['teams']);
+        let day_index = 0;
+        for (const day_standings of raw_data.standings.map(x => x[league_division_id])) {
+            if (day_index >= league_all_standings.length) {
+                league_all_standings.push([]);
+            }
+            league_all_standings[day_index].push(...day_standings);
+            ++day_index;
+        }
+    }
+    addChart(league_name, league_team_names, league_all_standings, index, opening_day);
+}
+
 async function changeYear(year: string) {
     let response = await fetch(`data/${year}.json`);
     let raw_data : any = await response.json();
@@ -178,33 +196,21 @@ async function changeYear(year: string) {
     const isDark = isDarkMode();
     let divisionIds = Object.keys(raw_data.metadata);
     divisionIds.sort((a, b) => get_division_name_sort_key(raw_data.metadata[a]['name']) - get_division_name_sort_key(raw_data.metadata[b]['name']));
+    let have_added_all_al = false;
     for (const divisionId of divisionIds) {
         const team_names : string[] = raw_data.metadata[divisionId]['teams'];
         const all_standings : Array<Array<number[]>> = raw_data.standings.map(x => x[divisionId]);
         const title = raw_data.metadata[divisionId]['name'];
-        if (title.startsWith("National League")) {
+        if (title.startsWith("National League") && !have_added_all_al) {
             // AL is first, put all AL teams here
-            const alDivisionIds = raw_data.metadata.filter(x => x['name'].startsWith("American League")).map(x => x['id']);
-            let al_team_names : string[] = [];
-            let al_all_standings : Array<Array<number[]>> = [];
-            for (const alDivisionId in alDivisionIds) {
-                al_team_names.push(...raw_data.metadata[alDivisionId]['teams']);
-                al_all_standings.push(...raw_data.standings.map(x => x[alDivisionId]));
-            }
-            addChart("American League", al_team_names, al_all_standings, index, opening_day);
+            have_added_all_al = true;
+            addLeagueChart(raw_data, "American League", index, opening_day);
             index++;
         }
         addChart(title, team_names, all_standings, index, opening_day);
         index++;
     }
-    const nlDivisionIds = raw_data.metadata.filter(x => x['name'].startsWith("National League")).map(x => x['id']);
-    let nl_team_names : string[] = [];
-    let nl_all_standings : Array<Array<number[]>> = [];
-    for (const nlDivisionId in nlDivisionIds) {
-        nl_team_names.push(...raw_data.metadata[nlDivisionId]['teams']);
-        nl_all_standings.push(...raw_data.standings.map(x => x[nlDivisionId]));
-    }
-    addChart("National League", nl_team_names, nl_all_standings, index, opening_day);
+    addLeagueChart(raw_data, "National League", index, opening_day);
     index++;
 }
 
