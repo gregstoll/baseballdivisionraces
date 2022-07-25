@@ -124,6 +124,50 @@ function get_division_name_sort_key(division_name: string): number {
     return key;
 }
 
+function addChart(title: string, team_names: string[], all_standings: Array<Array<number[]>>, index: number, opening_day: Date) {
+    const isDark = isDarkMode();
+    const astros_standings = all_standings.map(x => x[0]);
+    let date_values : Date[] = [opening_day];
+    while (date_values.length < astros_standings.length) {
+        date_values.push(next_day(date_values[date_values.length - 1]))
+    }
+    const plot_datas = get_plot_datas(all_standings, team_names, date_values);
+    const chartSection = document.getElementById("charts");
+    if (chartSection.childElementCount <= index) {
+        let newDiv = document.createElement('div');
+        newDiv.className = "chart";
+        chartSection.appendChild(newDiv);
+    }
+
+    const DARK_TEXT_COLOR = "#111111";
+    const LIGHT_TEXT_COLOR = "#eeeeee";
+    let textColor = isDark ? LIGHT_TEXT_COLOR : DARK_TEXT_COLOR;
+    Plotly.newPlot( chartSection.children.item(index), plot_datas,
+        {
+        title: {
+            text: title,
+            font: {
+                color: textColor
+            }
+        },
+        legend: {
+            font: {
+                color: textColor
+            }
+        },
+        xaxis: {
+            color: textColor
+        },
+        yaxis: {
+            color: textColor
+        },
+        hovermode: "x",
+        paper_bgcolor: isDark ? "#262626" : "#e6e6e6",
+        plot_bgcolor: isDark ? "#262626" : "#e6e6e6"
+        },
+        {responsive: true});
+}
+
 async function changeYear(year: string) {
     let response = await fetch(`data/${year}.json`);
     let raw_data : any = await response.json();
@@ -134,51 +178,34 @@ async function changeYear(year: string) {
     const isDark = isDarkMode();
     let divisionIds = Object.keys(raw_data.metadata);
     divisionIds.sort((a, b) => get_division_name_sort_key(raw_data.metadata[a]['name']) - get_division_name_sort_key(raw_data.metadata[b]['name']));
-    for (let divisionId of divisionIds) {
+    for (const divisionId of divisionIds) {
         const team_names : string[] = raw_data.metadata[divisionId]['teams'];
         const all_standings : Array<Array<number[]>> = raw_data.standings.map(x => x[divisionId]);
-        const astros_standings = all_standings.map(x => x[0]);
-        let date_values : Date[] = [opening_day];
-        while (date_values.length < astros_standings.length) {
-            date_values.push(next_day(date_values[date_values.length - 1]))
+        const title = raw_data.metadata[divisionId]['name'];
+        if (title.startsWith("National League")) {
+            // AL is first, put all AL teams here
+            const alDivisionIds = raw_data.metadata.filter(x => x['name'].startsWith("American League")).map(x => x['id']);
+            let al_team_names : string[] = [];
+            let al_all_standings : Array<Array<number[]>> = [];
+            for (const alDivisionId in alDivisionIds) {
+                al_team_names.push(...raw_data.metadata[alDivisionId]['teams']);
+                al_all_standings.push(...raw_data.standings.map(x => x[alDivisionId]));
+            }
+            addChart("American League", al_team_names, al_all_standings, index, opening_day);
+            index++;
         }
-        const plot_datas = get_plot_datas(all_standings, team_names, date_values);
-        const chartSection = document.getElementById("charts");
-        if (chartSection.childElementCount <= index) {
-            let newDiv = document.createElement('div');
-            newDiv.className = "chart";
-            chartSection.appendChild(newDiv);
-        }
-
-        const DARK_TEXT_COLOR = "#111111";
-        const LIGHT_TEXT_COLOR = "#eeeeee";
-        let textColor = isDark ? LIGHT_TEXT_COLOR : DARK_TEXT_COLOR;
-        Plotly.newPlot( chartSection.children.item(index), plot_datas,
-         {
-            title: {
-                text: raw_data.metadata[divisionId]['name'],
-                font: {
-                    color: textColor
-                }
-            },
-            legend: {
-                font: {
-                    color: textColor
-                }
-            },
-            xaxis: {
-                color: textColor
-            },
-            yaxis: {
-                color: textColor
-            },
-            hovermode: "x",
-            paper_bgcolor: isDark ? "#262626" : "#e6e6e6",
-            plot_bgcolor: isDark ? "#262626" : "#e6e6e6"
-         },
-         {responsive: true});
+        addChart(title, team_names, all_standings, index, opening_day);
         index++;
     }
+    const nlDivisionIds = raw_data.metadata.filter(x => x['name'].startsWith("National League")).map(x => x['id']);
+    let nl_team_names : string[] = [];
+    let nl_all_standings : Array<Array<number[]>> = [];
+    for (const nlDivisionId in nlDivisionIds) {
+        nl_team_names.push(...raw_data.metadata[nlDivisionId]['teams']);
+        nl_all_standings.push(...raw_data.standings.map(x => x[nlDivisionId]));
+    }
+    addChart("National League", nl_team_names, nl_all_standings, index, opening_day);
+    index++;
 }
 
 function isDarkMode() : boolean {
