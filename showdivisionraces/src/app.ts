@@ -11,7 +11,7 @@ class TeamColors {
     _light: string;
     _dark: string;
 
-    constructor(light, dark = undefined) {
+    constructor(light: string, dark: string|undefined = undefined) {
         this._light = light;
         this._dark = dark ?? light;
     }
@@ -171,8 +171,8 @@ function addChart(title: string, team_names: string[], all_standings: Array<Arra
         {responsive: true});
 }
 
-function addLeagueChart(raw_data: any, league_name: string, index: number, opening_day: Date) {
-    const league_division_ids = Object.keys(raw_data.metadata).filter(x => raw_data.metadata[x]['name'].startsWith(league_name));
+function addLeagueChart(raw_data: any, league_name: string|undefined, index: number, opening_day: Date) {
+    const league_division_ids = Object.keys(raw_data.metadata).filter(x => league_name === undefined || raw_data.metadata[x]['name'].startsWith(league_name));
     let league_team_names : string[] = [];
     let league_all_standings : Array<Array<number[]>> = [];
     for (const league_division_id of league_division_ids) {
@@ -186,7 +186,7 @@ function addLeagueChart(raw_data: any, league_name: string, index: number, openi
             ++day_index;
         }
     }
-    addChart(league_name, league_team_names, league_all_standings, index, opening_day);
+    addChart(league_name || "All MLB", league_team_names, league_all_standings, index, opening_day);
 }
 
 async function changeYear(year: string) {
@@ -214,6 +214,9 @@ async function changeYear(year: string) {
         index++;
     }
     addLeagueChart(raw_data, "National League", index, opening_day);
+    index++;
+    // undefined = all MLB
+    addLeagueChart(raw_data, undefined, index, opening_day);
     index++;
 }
 
