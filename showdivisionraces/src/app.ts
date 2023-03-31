@@ -1,7 +1,7 @@
 import Plotly from 'plotly.js-basic-dist-min';
 
 const MIN_YEAR = 1995;
-const MAX_YEAR = 2022;
+const MAX_YEAR = 2023;
 
 function next_day(d: Date) : Date {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
