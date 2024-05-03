@@ -1,7 +1,7 @@
 import Plotly from 'plotly.js-basic-dist-min';
 
 const MIN_YEAR = 1995;
-const MAX_YEAR = 2023;
+const MAX_YEAR = 2024;
 
 function next_day(d: Date) : Date {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
@@ -141,6 +141,7 @@ function addChart(title: string, team_names: string[], all_standings: Array<Arra
         newDiv.className = "chart";
         chartSection.appendChild(newDiv);
     }
+    const lots_of_teams = team_names.length >= 10;
 
     const DARK_TEXT_COLOR = "#111111";
     const LIGHT_TEXT_COLOR = "#eeeeee";
@@ -166,7 +167,8 @@ function addChart(title: string, team_names: string[], all_standings: Array<Arra
         },
         hovermode: "x",
         paper_bgcolor: isDark ? "#262626" : "#e6e6e6",
-        plot_bgcolor: isDark ? "#262626" : "#e6e6e6"
+        plot_bgcolor: isDark ? "#262626" : "#e6e6e6",
+        height: lots_of_teams ? 500 : 450
         },
         {responsive: true});
 }
