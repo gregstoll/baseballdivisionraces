@@ -76,6 +76,10 @@ TEAM_NAMES_TO_COLORS.set("Tampa Bay Devil Rays", TEAM_NAMES_TO_COLORS.get("Tampa
 TEAM_NAMES_TO_COLORS.set("Florida Marlins", TEAM_NAMES_TO_COLORS.get("Miami Marlins"));
 TEAM_NAMES_TO_COLORS.set("Montreal Expos", TEAM_NAMES_TO_COLORS.get("Washington Nationals"));
 
+// Returns the plots in reverse order so team plots with a better record get drawn
+// on top of team plots with a worse record.
+// Callers must set legend.traceorder to "reversed" to reverse the order the plots
+// show up in the legend.
 function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: string[], date_values: Date[]) : any[] {
     let plot_datas = [];
     const isDark = isDarkMode();
@@ -98,6 +102,7 @@ function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: strin
         });
     }
     plot_datas.sort((data1, data2) => data2.y[data2.y.length - 1] - data1.y[data1.y.length - 1]);
+    plot_datas.reverse();
     return plot_datas;
 }
 
@@ -146,7 +151,7 @@ function addChart(title: string, team_names: string[], all_standings: Array<Arra
     const DARK_TEXT_COLOR = "#111111";
     const LIGHT_TEXT_COLOR = "#eeeeee";
     let textColor = isDark ? LIGHT_TEXT_COLOR : DARK_TEXT_COLOR;
-    Plotly.newPlot( chartSection.children.item(index), plot_datas,
+    Plotly.newPlot(chartSection.children.item(index), plot_datas,
         {
         title: {
             text: title,
@@ -157,7 +162,8 @@ function addChart(title: string, team_names: string[], all_standings: Array<Arra
         legend: {
             font: {
                 color: textColor
-            }
+            },
+            traceorder: "reversed"
         },
         xaxis: {
             color: textColor
