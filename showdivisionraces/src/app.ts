@@ -1,7 +1,7 @@
 import Plotly from 'plotly.js-basic-dist-min';
 
 const MIN_YEAR = 1995;
-const MAX_YEAR = 2024;
+const MAX_YEAR = 2025;
 
 function next_day(d: Date) : Date {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
@@ -27,7 +27,7 @@ class TeamColors {
 
 const TEAM_NAMES_TO_COLORS : Map<string, TeamColors> = new Map([
     ["Houston Astros", new TeamColors("#eb6e1f")],
-    ["Oakland Athletics", new TeamColors("#003831", "#efb21e")],
+    ["Athletics", new TeamColors("#003831", "#efb21e")],
     // Lighten #005c5c to #00a0a0
     ["Seattle Mariners", new TeamColors("#00a0a0", "#005c5c")],
     ["Los Angeles Angels", new TeamColors("#862633")],
@@ -75,6 +75,7 @@ TEAM_NAMES_TO_COLORS.set("Anaheim Angels", TEAM_NAMES_TO_COLORS.get("Los Angeles
 TEAM_NAMES_TO_COLORS.set("Tampa Bay Devil Rays", TEAM_NAMES_TO_COLORS.get("Tampa Bay Rays"));
 TEAM_NAMES_TO_COLORS.set("Florida Marlins", TEAM_NAMES_TO_COLORS.get("Miami Marlins"));
 TEAM_NAMES_TO_COLORS.set("Montreal Expos", TEAM_NAMES_TO_COLORS.get("Washington Nationals"));
+TEAM_NAMES_TO_COLORS.set("Oakland Athletics", TEAM_NAMES_TO_COLORS.get("Athletics"));
 
 // Returns the plots in reverse order so team plots with a better record get drawn
 // on top of team plots with a worse record.
