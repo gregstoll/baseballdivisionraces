@@ -234,7 +234,8 @@ class MlbYearStandings:
 
     def _search_backward_for_opening_day(self, opening_day_attempt: datetime.date, opening_day_data) -> datetime.date:
         while not data_is_before_opening_day(opening_day_data):
-            self._store_day_data(opening_day_attempt, opening_day_data)
+            if opening_day_attempt < datetime.date.today():
+                self._store_day_data(opening_day_attempt, opening_day_data)
             opening_day_attempt = previous_day(opening_day_attempt)
             opening_day_data = get_raw_standings_data(opening_day_attempt, self.quiet)
         return next_day(opening_day_attempt)
@@ -251,8 +252,13 @@ class MlbYearStandings:
         for division_id in data:
             division_stored_data : list[tuple[str, TeamStanding]] = list()
             teams = data[division_id]['teams']
+            all_teams = set(self.metadata.id_to_division_info_dict[division_id].team_names)
             for team in teams:
                 division_stored_data.append((team['name'], TeamStanding(TeamId(team['team_id']), team['w'], team['l'])))
+                all_teams.remove(team['name'])
+            for unknown_team in all_teams:
+                print(f"Missing team {unknown_team} for date {date}")
+                division_stored_data.append((unknown_team, None))
             division_stored_data.sort()
             days_stored_data[division_id] = [x[1] for x in division_stored_data]
         self.all_day_data[date] = days_stored_data
@@ -277,13 +283,31 @@ class MlbYearStandings:
         yesterday_data = opening_day_data
         for today in all_days[1:]:
             today_data = self.all_day_data[today]
+            for division_id in yesterday_data:
+                if division_id not in today_data:
+                    print(f"No data for division {division_id} on {today}, just going to copy from yesterday")
+                    today_data[division_id] = yesterday_data[division_id]
             for division_id in today_data:
                 today_division_data = today_data[division_id]
+                if division_id not in yesterday_data:
+                    print(f"No data for division {division_id} the day before {today}, skipping validation")
+                    continue
                 yesterday_division_data = yesterday_data[division_id]
                 if len(today_division_data) != len(yesterday_division_data):
-                    print(f"Mismatched division size - today {today}, today_division_data {today_division_data} yesterday_division_data {yesterday_division_data}")
-                    return False
+                    print(f"Mismatched division size - today {today} division_id {division_id} , today_division_data {today_division_data} yesterday_division_data {yesterday_division_data}: trying to fix")
+                    if len(today_division_data) < len(yesterday_division_data):
+                        while len(today_division_data) < len(yesterday_division_data):
+                            today_division_data.append(yesterday_division_data[len(today_division_data)])
+                        print(f"Adjusted to {today_division_data}")
+                    else:
+                        print("Couldn't fix")
+                        return False
+                index = 0
                 for (today_ts, yesterday_ts) in zip(today_division_data, yesterday_division_data):
+                    if today_ts is None:
+                        print(f"Missing data for team on {today}, fixing")
+                        today_ts = TeamStanding(yesterday_ts.team_id, yesterday_ts.wins, yesterday_ts.losses)
+                        today_division_data[index] = today_ts
                     if today_ts.team_id != yesterday_ts.team_id:
                         if not (is_update and (yesterday_ts.team_id is None or today_ts.team_id is None)):
                             print(f"Team IDs out of order - today {today} today_division_data {today_division_data} yesterday_division_data {yesterday_division_data}")
@@ -316,6 +340,7 @@ class MlbYearStandings:
                         elif today_ts.losses - yesterday_ts.losses == -1:
                             print(f"Resetting losses")
                             yesterday_ts.losses = today_ts.losses
+                    index = index + 1
             yesterday_data = today_data
         if self.metadata.year != datetime.date.today().year:
             last_day_data = self.all_day_data[all_days[-1]]
