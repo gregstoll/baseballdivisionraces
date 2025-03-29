@@ -252,7 +252,7 @@ class MlbYearStandings:
         for division_id in data:
             division_stored_data : list[tuple[str, TeamStanding]] = list()
             teams = data[division_id]['teams']
-            all_teams = set(self.metadata.id_to_division_info_dict[division_id].team_names)
+            all_teams = set(self.metadata.id_to_division_info_dict[str(division_id)].team_names)
             for team in teams:
                 division_stored_data.append((team['name'], TeamStanding(TeamId(team['team_id']), team['w'], team['l'])))
                 all_teams.remove(team['name'])
