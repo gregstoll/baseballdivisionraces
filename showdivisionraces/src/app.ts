@@ -149,7 +149,7 @@ function get_division_name_sort_key(division_name: string): number {
     return key;
 }
 
-function addChart(title: string, team_names: string[], all_standings: Array<Array<number[]>>, index: number, opening_day: Date, multiyear?: boolean) {
+function addChart(title: string, subtitle: string | undefined, team_names: string[], all_standings: Array<Array<number[]>>, opening_day: Date, multiyear?: boolean) {
     const isDark = isDarkMode();
     const astros_standings = all_standings.map(x => x[0]);
     let date_values : Date[] = [opening_day];
@@ -158,11 +158,9 @@ function addChart(title: string, team_names: string[], all_standings: Array<Arra
     }
     const plot_datas = get_plot_datas(all_standings, team_names, date_values);
     const chartSection = document.getElementById("charts");
-    if (chartSection.childElementCount <= index) {
-        let newDiv = document.createElement('div');
-        newDiv.className = "chart";
-        chartSection.appendChild(newDiv);
-    }
+    let targetDiv = document.createElement('div');
+    targetDiv.className = "chart";
+    chartSection.appendChild(targetDiv);
     const lots_of_teams = team_names.length >= 10;
 
     const DARK_TEXT_COLOR = "#111111";
@@ -196,12 +194,14 @@ function addChart(title: string, team_names: string[], all_standings: Array<Arra
     if (multiyear) {
         plotOptions.xaxis['tickformat'] = '%b %d';
     }
+    if (subtitle) {
+        plotOptions.title.text = plotOptions.title.text + `<br><sup>${subtitle}</sup>`;
+    }
  
-    Plotly.newPlot(chartSection.children.item(index), plot_datas, plotOptions,
-        {responsive: true});
+    Plotly.newPlot(targetDiv, plot_datas, plotOptions, {responsive: true});
 }
 
-function addLeagueChart(raw_data: any, league_name: string|undefined, index: number, opening_day: Date) {
+function addLeagueChart(raw_data: any, league_name: string|undefined, opening_day: Date) {
     const league_division_ids = Object.keys(raw_data.metadata).filter(x => league_name === undefined || raw_data.metadata[x]['name'].startsWith(league_name));
     let league_team_names : string[] = [];
     let league_all_standings : Array<Array<number[]>> = [];
@@ -216,7 +216,7 @@ function addLeagueChart(raw_data: any, league_name: string|undefined, index: num
             ++day_index;
         }
     }
-    addChart(league_name || "All MLB", league_team_names, league_all_standings, index, opening_day, false);
+    addChart(league_name || "All MLB", undefined, league_team_names, league_all_standings, opening_day, false);
 }
 
 function findDivisionIdAndIndex(data: any, teamName: string): {divisionId: string, index: number} {
@@ -261,6 +261,14 @@ async function rockiesWhiteSox(data2024: any, data2025: any) {
     while (whiteSoxData.length < rockiesData.length) {
         whiteSoxData.push(whiteSoxData[whiteSoxData.length - 1]);
     }
+    // ugh, can't use this because of how we pass in all_standings
+    /*let rockiesFirst;
+    {
+        let index = rockiesData.length - 1;
+        let rockiesAbove500 = rockiesData[index][0] - rockiesData[index][1];
+        let whiteSoxAbove500 = whiteSoxData[index][0] - whiteSoxData[index][1];
+        rockiesFirst = rockiesAbove500 > whiteSoxAbove500;
+    }*/
     // Don't pad Rockies data, they're still playing
     let all_standings = whiteSoxData.map((data, index) => {
         if (index < rockiesData.length) {
@@ -269,7 +277,9 @@ async function rockiesWhiteSox(data2024: any, data2025: any) {
         return [data];
     });
 
-    addChart("Chasing History", ["2024 White Sox", "2025 Rockies"], all_standings, 0, opening_day, true);
+    addChart("Chasing History",
+         "<br>The 2024 White Sox set the record for losses in a season<br>with 121. Can the 2025 Rockies \"beat\" them?<br>",
+         ["2024 White Sox", "2025 Rockies"], all_standings, opening_day, true);
 }
 
 async function changeYear(year: string) {
@@ -284,7 +294,6 @@ async function changeYear(year: string) {
     let have_added_all_al = false;
     await rockiesWhiteSox(year === "2024" ? raw_data : undefined, year === "2025" ? raw_data : undefined);
 
-    let index = 1;
     for (const divisionId of divisionIds) {
         const team_names : string[] = raw_data.metadata[divisionId]['teams'];
         const all_standings : Array<Array<number[]>> = raw_data.standings.map(x => x[divisionId]);
@@ -292,17 +301,13 @@ async function changeYear(year: string) {
         if (title.startsWith("National League") && !have_added_all_al) {
             // AL is first, put all AL teams here
             have_added_all_al = true;
-            addLeagueChart(raw_data, "American League", index, opening_day);
-            index++;
+            addLeagueChart(raw_data, "American League", opening_day);
         }
-        addChart(title, team_names, all_standings, index, opening_day);
-        index++;
+        addChart(title, undefined, team_names, all_standings, opening_day);
     }
-    addLeagueChart(raw_data, "National League", index, opening_day);
-    index++;
+    addLeagueChart(raw_data, "National League", opening_day);
     // undefined = all MLB
-    addLeagueChart(raw_data, undefined, index, opening_day);
-    index++;
+    addLeagueChart(raw_data, undefined, opening_day);
 }
 
 function isDarkMode() : boolean {
