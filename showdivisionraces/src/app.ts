@@ -292,6 +292,8 @@ async function changeYear(year: string) {
     let divisionIds = Object.keys(raw_data.metadata);
     divisionIds.sort((a, b) => get_division_name_sort_key(raw_data.metadata[a]['name']) - get_division_name_sort_key(raw_data.metadata[b]['name']));
     let have_added_all_al = false;
+
+    document.getElementById("charts").innerHTML = '';
     await rockiesWhiteSox(year === "2024" ? raw_data : undefined, year === "2025" ? raw_data : undefined);
 
     for (const divisionId of divisionIds) {
