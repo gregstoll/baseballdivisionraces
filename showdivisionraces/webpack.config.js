@@ -44,7 +44,10 @@ module.exports = {
   },
   devtool: 'inline-source-map',
   devServer: {
-    contentBase: paths.dist,
-    publicPath: "/dist"
+    static: {
+      directory: paths.dist,
+    },
+    //contentBase: paths.dist,
+    //publicPath: "/dist"*
   },
 }
