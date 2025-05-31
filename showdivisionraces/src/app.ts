@@ -77,6 +77,12 @@ TEAM_NAMES_TO_COLORS.set("Florida Marlins", TEAM_NAMES_TO_COLORS.get("Miami Marl
 TEAM_NAMES_TO_COLORS.set("Montreal Expos", TEAM_NAMES_TO_COLORS.get("Washington Nationals"));
 TEAM_NAMES_TO_COLORS.set("Oakland Athletics", TEAM_NAMES_TO_COLORS.get("Athletics"));
 
+TEAM_NAMES_TO_COLORS.set("2025 Rockies", TEAM_NAMES_TO_COLORS.get("Colorado Rockies"));
+TEAM_NAMES_TO_COLORS.set("2024 White Sox", TEAM_NAMES_TO_COLORS.get("Chicago White Sox"));
+// Irritatingly these two teams have very similar dark colors
+let rockies = TEAM_NAMES_TO_COLORS.get("2025 Rockies");
+rockies = new TeamColors(rockies.light, "#87629d");
+TEAM_NAMES_TO_COLORS.set("2025 Rockies", rockies);
 // Returns the plots in reverse order so team plots with a better record get drawn
 // on top of team plots with a worse record.
 // Callers must set legend.traceorder to "reversed" to reverse the order the plots
@@ -86,12 +92,13 @@ function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: strin
     const isDark = isDarkMode();
     const division_leader_games_above_500 = get_division_leader_games_over_500(all_standings);
     for (let i = 0; i < team_names.length; ++i) {
-        const team_standings = all_standings.map(x => x[i]);
+        const team_standings = all_standings.map(x => x[i]).filter(v => v !== undefined);
         const games_above_500 = team_standings.map(x => x[0] - x[1]);
         const hover_texts = team_standings.map((x, i) => `${x[0]}-${x[1]}\n${get_games_back_string(x, division_leader_games_above_500[i])}`);
         const team_colors = useTeamColors ? TEAM_NAMES_TO_COLORS.get(team_names[i]) : null;
+        let team_date_values = date_values.slice(0, games_above_500.length);
         plot_datas.push({
-            x: date_values,
+            x: team_date_values,
             y: games_above_500,
             text: hover_texts,
             hoverinfo: "text+x",
@@ -108,14 +115,23 @@ function get_plot_datas(all_standings: Array<Array<number[]>>, team_names: strin
 }
 
 function get_games_back_string(team_standing: number[], leader_games_above_500: number): string {
+    if (leader_games_above_500 === undefined) {
+        return "";
+    }
     const games_back = leader_games_above_500 - (team_standing[0] - team_standing[1]);
     return games_back === 0 ? "-" : `${games_back/2} GB`;
 }
 
 function get_division_leader_games_over_500(all_standings: Array<Array<number[]>>): number[] {
     const day_indices = Array.from(new Array(all_standings.length).keys());
+    // TODO - check max length of all standings
     const team_indices = Array.from(new Array(all_standings[0].length).keys());
-    return day_indices.map(i => Math.max(...team_indices.map(t => all_standings[i][t][0] - all_standings[i][t][1])));
+    return day_indices.map(i => Math.max(...team_indices.map(t => {
+        if (t < all_standings[i].length) {
+            return all_standings[i][t][0] - all_standings[i][t][1];
+        }
+        return undefined;
+    }).filter(x => x !== undefined)));
 }
 
 function get_division_name_sort_key(division_name: string): number {
@@ -133,7 +149,7 @@ function get_division_name_sort_key(division_name: string): number {
     return key;
 }
 
-function addChart(title: string, team_names: string[], all_standings: Array<Array<number[]>>, index: number, opening_day: Date) {
+function addChart(title: string, team_names: string[], all_standings: Array<Array<number[]>>, index: number, opening_day: Date, multiyear?: boolean) {
     const isDark = isDarkMode();
     const astros_standings = all_standings.map(x => x[0]);
     let date_values : Date[] = [opening_day];
@@ -152,8 +168,7 @@ function addChart(title: string, team_names: string[], all_standings: Array<Arra
     const DARK_TEXT_COLOR = "#111111";
     const LIGHT_TEXT_COLOR = "#eeeeee";
     let textColor = isDark ? LIGHT_TEXT_COLOR : DARK_TEXT_COLOR;
-    Plotly.newPlot(chartSection.children.item(index), plot_datas,
-        {
+    let plotOptions = {
         title: {
             text: title,
             font: {
@@ -176,7 +191,13 @@ function addChart(title: string, team_names: string[], all_standings: Array<Arra
         paper_bgcolor: isDark ? "#262626" : "#e6e6e6",
         plot_bgcolor: isDark ? "#262626" : "#e6e6e6",
         height: lots_of_teams ? 500 : 450
-        },
+    };
+    
+    if (multiyear) {
+        plotOptions.xaxis['tickformat'] = '%b %d';
+    }
+ 
+    Plotly.newPlot(chartSection.children.item(index), plot_datas, plotOptions,
         {responsive: true});
 }
 
@@ -195,7 +216,60 @@ function addLeagueChart(raw_data: any, league_name: string|undefined, index: num
             ++day_index;
         }
     }
-    addChart(league_name || "All MLB", league_team_names, league_all_standings, index, opening_day);
+    addChart(league_name || "All MLB", league_team_names, league_all_standings, index, opening_day, false);
+}
+
+function findDivisionIdAndIndex(data: any, teamName: string): {divisionId: string, index: number} {
+    for (let divisionId of Object.keys(data.metadata)) {
+        let index = data.metadata[divisionId]['teams'].indexOf(teamName);
+        if (index != -1) {
+            return {divisionId, index};
+        }
+    }
+    return {divisionId: "NOTFOUND", index: -1};
+}
+
+async function rockiesWhiteSox(data2024: any, data2025: any) {
+    if (!data2024) {
+        let response = await fetch(`data/2024.json`);
+        data2024 = await response.json();
+    }
+    if (!data2025) {
+        let response = await fetch(`data/2025.json`);
+        data2025 = await response.json();
+    }
+
+    const opening_day_2024_str_parts : number[] = (data2024.opening_day as string).split('/').map(x => parseInt(x, 10));
+    // month is 0-indexed
+    let opening_day_2024 : Date = new Date(2025, opening_day_2024_str_parts[1] - 1, opening_day_2024_str_parts[2]);
+    const opening_day_2025_str_parts : number[] = (data2025.opening_day as string).split('/').map(x => parseInt(x, 10));
+    let opening_day_2025 : Date = new Date(2025, opening_day_2025_str_parts[1] - 1, opening_day_2025_str_parts[2]);
+    let opening_day : Date = opening_day_2024 < opening_day_2025 ? opening_day_2024 : opening_day_2025;
+
+    let whiteSoxInfo = findDivisionIdAndIndex(data2024, "Chicago White Sox");
+    let whiteSoxData : Array<number[]> = data2024.standings.map(x => x[whiteSoxInfo.divisionId][whiteSoxInfo.index]);
+    while (opening_day_2024 < opening_day) {
+        whiteSoxData.unshift([0, 0]);
+        opening_day_2024 = next_day(opening_day_2024);
+    }
+    let rockiesInfo = findDivisionIdAndIndex(data2025, "Colorado Rockies");
+    let rockiesData : Array<number[]> = data2025.standings.map(x => x[rockiesInfo.divisionId][rockiesInfo.index]);
+    while (opening_day_2025 < opening_day) {
+        rockiesData.unshift([0, 0]);
+        opening_day_2025 = next_day(opening_day_2025);
+    }
+    while (whiteSoxData.length < rockiesData.length) {
+        whiteSoxData.push(whiteSoxData[whiteSoxData.length - 1]);
+    }
+    // Don't pad Rockies data, they're still playing
+    let all_standings = whiteSoxData.map((data, index) => {
+        if (index < rockiesData.length) {
+            return [data, rockiesData[index]];
+        }
+        return [data];
+    });
+
+    addChart("Chasing History", ["2024 White Sox", "2025 Rockies"], all_standings, 0, opening_day, true);
 }
 
 async function changeYear(year: string) {
@@ -204,11 +278,13 @@ async function changeYear(year: string) {
     const opening_day_str_parts : number[] = (raw_data.opening_day as string).split('/').map(x => parseInt(x, 10));
     // month is 0-indexed
     const opening_day : Date = new Date(opening_day_str_parts[0], opening_day_str_parts[1] - 1, opening_day_str_parts[2]);
-    let index = 0;
     const isDark = isDarkMode();
     let divisionIds = Object.keys(raw_data.metadata);
     divisionIds.sort((a, b) => get_division_name_sort_key(raw_data.metadata[a]['name']) - get_division_name_sort_key(raw_data.metadata[b]['name']));
     let have_added_all_al = false;
+    await rockiesWhiteSox(year === "2024" ? raw_data : undefined, year === "2025" ? raw_data : undefined);
+
+    let index = 1;
     for (const divisionId of divisionIds) {
         const team_names : string[] = raw_data.metadata[divisionId]['teams'];
         const all_standings : Array<Array<number[]>> = raw_data.standings.map(x => x[divisionId]);
