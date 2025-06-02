@@ -6,6 +6,9 @@ const MAX_YEAR = 2025;
 function next_day(d: Date) : Date {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
 }
+function prev_day(d: Date) : Date {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+}
 
 class TeamColors {
     _light: string;
@@ -248,15 +251,15 @@ async function rockiesWhiteSox(data2024: any, data2025: any) {
 
     let whiteSoxInfo = findDivisionIdAndIndex(data2024, "Chicago White Sox");
     let whiteSoxData : Array<number[]> = data2024.standings.map(x => x[whiteSoxInfo.divisionId][whiteSoxInfo.index]);
-    while (opening_day_2024 < opening_day) {
+    while (opening_day_2024 > opening_day) {
         whiteSoxData.unshift([0, 0]);
-        opening_day_2024 = next_day(opening_day_2024);
+        opening_day_2024 = prev_day(opening_day_2024);
     }
     let rockiesInfo = findDivisionIdAndIndex(data2025, "Colorado Rockies");
     let rockiesData : Array<number[]> = data2025.standings.map(x => x[rockiesInfo.divisionId][rockiesInfo.index]);
-    while (opening_day_2025 < opening_day) {
+    while (opening_day_2025 > opening_day) {
         rockiesData.unshift([0, 0]);
-        opening_day_2025 = next_day(opening_day_2025);
+        opening_day_2025 = prev_day(opening_day_2025);
     }
     while (whiteSoxData.length < rockiesData.length) {
         whiteSoxData.push(whiteSoxData[whiteSoxData.length - 1]);
