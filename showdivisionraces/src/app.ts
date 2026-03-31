@@ -1,7 +1,7 @@
 import Plotly from 'plotly.js-basic-dist-min';
 
 const MIN_YEAR = 1995;
-const MAX_YEAR = 2025;
+const MAX_YEAR = 2026;
 
 function next_day(d: Date) : Date {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
@@ -232,7 +232,7 @@ function findDivisionIdAndIndex(data: any, teamName: string): {divisionId: strin
     return {divisionId: "NOTFOUND", index: -1};
 }
 
-async function rockiesWhiteSox(data2024: any, data2025: any) {
+/*async function rockiesWhiteSox(data2024: any, data2025: any) {
     if (!data2024) {
         let response = await fetch(`data/2024.json`);
         data2024 = await response.json();
@@ -265,13 +265,13 @@ async function rockiesWhiteSox(data2024: any, data2025: any) {
         whiteSoxData.push(whiteSoxData[whiteSoxData.length - 1]);
     }
     // ugh, can't use this because of how we pass in all_standings
-    /*let rockiesFirst;
-    {
-        let index = rockiesData.length - 1;
-        let rockiesAbove500 = rockiesData[index][0] - rockiesData[index][1];
-        let whiteSoxAbove500 = whiteSoxData[index][0] - whiteSoxData[index][1];
-        rockiesFirst = rockiesAbove500 > whiteSoxAbove500;
-    }*/
+    //let rockiesFirst;
+    //{
+    //    let index = rockiesData.length - 1;
+    //    let rockiesAbove500 = rockiesData[index][0] - rockiesData[index][1];
+    //    let whiteSoxAbove500 = whiteSoxData[index][0] - whiteSoxData[index][1];
+    //    rockiesFirst = rockiesAbove500 > whiteSoxAbove500;
+    //}
     // Don't pad Rockies data, they're still playing
     let all_standings = whiteSoxData.map((data, index) => {
         if (index < rockiesData.length) {
@@ -283,7 +283,7 @@ async function rockiesWhiteSox(data2024: any, data2025: any) {
     addChart("Chasing History",
          "<br>The 2024 White Sox set the record for losses in a season<br>with 121. Can the 2025 Rockies \"beat\" them?<br>",
          ["2024 White Sox", "2025 Rockies"], all_standings, opening_day, true);
-}
+}*/
 
 async function changeYear(year: string) {
     let response = await fetch(`data/${year}.json`);
@@ -297,7 +297,7 @@ async function changeYear(year: string) {
     let have_added_all_al = false;
 
     document.getElementById("charts").innerHTML = '';
-    await rockiesWhiteSox(year === "2024" ? raw_data : undefined, year === "2025" ? raw_data : undefined);
+    //await rockiesWhiteSox(year === "2024" ? raw_data : undefined, year === "2025" ? raw_data : undefined);
 
     for (const divisionId of divisionIds) {
         const team_names : string[] = raw_data.metadata[divisionId]['teams'];
