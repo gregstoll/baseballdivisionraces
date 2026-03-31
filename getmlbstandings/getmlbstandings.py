@@ -54,7 +54,7 @@ class MlbMetadata:
         raw_data = get_raw_standings_data(datetime.date(year=year, month=8, day=1), quiet)
         metadata = cls(year)
         for division_id in raw_data:
-            metadata.add_division_info(DivisionId(division_id), raw_data[division_id])
+            metadata.add_division_info(DivisionId(int(division_id)), raw_data[division_id])
         metadata.year = year
         return metadata
     
@@ -72,7 +72,7 @@ class MlbMetadata:
                     divisionInfoJson = metadataJson[division_id]
                     divisionInfo = DivisionInfo(division_id, divisionInfoJson['name'])
                     divisionInfo.team_names = divisionInfoJson['teams']
-                    metadata.id_to_division_info_dict[division_id] = divisionInfo
+                    metadata.id_to_division_info_dict[int(division_id)] = divisionInfo
                 return metadata
         except json.JSONDecodeError:
             return None
